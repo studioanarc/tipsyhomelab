@@ -1,0 +1,38 @@
+# Add-on Icon
+
+Place a 512x512 PNG icon file named `icon.png` in this directory.
+
+The icon will be displayed in the Home Assistant add-on store.
+
+## Icon Guidelines
+
+- **Size**: 512x512 pixels (required)
+- **Format**: PNG with transparency
+- **Style**: Simple, recognizable design
+- **Colors**: Should work on light and dark backgrounds
+- **Content**: Wine glass, fermentation vessel, or related imagery
+
+## Suggested Icon Ideas
+
+1. Wine glass with thermometer
+2. Fermentation vessel with data chart
+3. Wine bottle with monitoring badge
+4. Grapes with tech/circuit elements
+5. Laboratory flask with wine color
+
+## Creating the Icon
+
+You can:
+- Design in Figma, Sketch, or Adobe Illustrator
+- Use free icon tools like Inkscape
+- Commission a designer on Fiverr or 99designs
+- Use AI image generators with refinement
+
+## Temporary Solution
+
+Until you create a custom icon, you can use a placeholder from:
+- https://fonts.google.com/icons
+- https://fontawesome.com
+- https://materialdesignicons.com
+
+Export as PNG at 512x512 and name it `icon.png`.

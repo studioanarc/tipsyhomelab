@@ -1,0 +1,456 @@
+# TipsyHomeLab Lovelace Dashboard Examples
+#
+# These are example dashboard configurations for Home Assistant.
+# Copy and paste into your Lovelace dashboard YAML editor.
+#
+# To use:
+# 1. Edit dashboard
+# 2. Click "..." menu → "Raw configuration editor"
+# 3. Add these card configurations
+# 4. Update entity IDs to match your setup
+
+# ============================================================================
+# SIMPLE STATUS CARD
+# ============================================================================
+# Basic fermentation status with key metrics
+type: entities
+title: Pet Nat Batch Status
+entities:
+  - entity: sensor.tipsylab_batch1_state
+    name: Fermentation State
+    icon: mdi:state-machine
+
+  - entity: sensor.tipsylab_batch1_bubble_rate
+    name: Bubble Rate
+    icon: mdi:water
+
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Specific Gravity
+    icon: mdi:gauge
+
+  - entity: sensor.tipsylab_batch1_temperature
+    name: Temperature
+
+  - entity: sensor.tipsylab_batch1_days_elapsed
+    name: Days Elapsed
+    icon: mdi:calendar
+
+  - entity: sensor.tipsylab_batch1_days_remaining
+    name: Est. Days Remaining
+    icon: mdi:calendar-clock
+
+# ============================================================================
+# DETAILED MONITORING CARD
+# ============================================================================
+# More comprehensive view with all sensors
+type: entities
+title: Fermentation Monitor
+show_header_toggle: false
+entities:
+  # Current Status
+  - type: section
+    label: Current Status
+
+  - entity: binary_sensor.tipsylab_batch1_active
+    name: Fermentation Active
+    icon: mdi:flask
+
+  - entity: sensor.tipsylab_batch1_state
+    name: Phase
+    icon: mdi:state-machine
+
+  # Activity Metrics
+  - type: section
+    label: Activity
+
+  - entity: sensor.tipsylab_batch1_bubble_rate
+    name: Bubble Rate
+    icon: mdi:water
+
+  - entity: sensor.tipsylab_batch1_bubble_count
+    name: Total Bubbles
+    icon: mdi:counter
+
+  # Gravity
+  - type: section
+    label: Gravity
+
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Current SG
+    icon: mdi:gauge
+
+  - entity: sensor.tipsylab_batch1_original_gravity
+    name: Original SG
+
+  - entity: sensor.tipsylab_batch1_attenuation
+    name: Attenuation
+    icon: mdi:percent
+
+  - entity: sensor.tipsylab_batch1_abv
+    name: Alcohol %
+    icon: mdi:glass-wine
+
+  # Temperature
+  - type: section
+    label: Environment
+
+  - entity: sensor.tipsylab_batch1_temperature
+    name: Temperature
+
+  # Predictions
+  - type: section
+    label: Predictions
+
+  - entity: sensor.tipsylab_batch1_predicted_completion
+    name: Completion Date
+    icon: mdi:calendar-check
+
+  - entity: sensor.tipsylab_batch1_predicted_gravity
+    name: Final Gravity
+
+  - entity: sensor.tipsylab_batch1_predicted_pressure
+    name: Bottle Pressure
+    icon: mdi:gauge
+
+  - entity: binary_sensor.tipsylab_batch1_bottling_window
+    name: Bottling Window Open
+    icon: mdi:bottle-wine
+
+# ============================================================================
+# HISTORY GRAPH - Bubble Rate
+# ============================================================================
+# Shows bubble rate over time
+type: history-graph
+title: Fermentation Activity (48h)
+entities:
+  - entity: sensor.tipsylab_batch1_bubble_rate
+    name: Bubbles/min
+hours_to_show: 48
+refresh_interval: 60
+
+# ============================================================================
+# HISTORY GRAPH - Gravity
+# ============================================================================
+# Shows gravity decline over time
+type: history-graph
+title: Specific Gravity Trend
+entities:
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Current SG
+  - entity: sensor.tipsylab_batch1_predicted_gravity
+    name: Predicted Final SG
+hours_to_show: 168  # 7 days
+refresh_interval: 300
+
+# ============================================================================
+# HISTORY GRAPH - Multi-Sensor
+# ============================================================================
+# Combined view of multiple sensors
+type: history-graph
+title: Complete Fermentation Data
+entities:
+  - entity: sensor.tipsylab_batch1_bubble_rate
+    name: Bubble Rate
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Gravity
+  - entity: sensor.tipsylab_batch1_temperature
+    name: Temperature
+hours_to_show: 168
+refresh_interval: 300
+
+# ============================================================================
+# GAUGE CARD - Bubble Rate
+# ============================================================================
+# Visual gauge for current bubble rate
+type: gauge
+entity: sensor.tipsylab_batch1_bubble_rate
+name: Fermentation Activity
+unit: bubbles/min
+min: 0
+max: 120
+severity:
+  green: 20
+  yellow: 10
+  red: 0
+needle: true
+
+# ============================================================================
+# GAUGE CARD - Bottle Pressure
+# ============================================================================
+# Safety gauge for predicted bottle pressure
+type: gauge
+entity: sensor.tipsylab_batch1_predicted_pressure
+name: Predicted Bottle Pressure
+unit: bar
+min: 0
+max: 6
+severity:
+  green: 0
+  yellow: 4
+  red: 5
+needle: true
+segments:
+  - from: 0
+    color: '#0da035'
+    label: Safe
+  - from: 4
+    color: '#f4b400'
+    label: High
+  - from: 5
+    color: '#db4437'
+    label: Danger
+
+# ============================================================================
+# PET NAT BOTTLING WINDOW CARD
+# ============================================================================
+# Special card for Pet Nat showing bottling window
+type: entities
+title: Pet Nat Bottling Assistant
+entities:
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Current Gravity
+
+  - entity: sensor.tipsylab_batch1_predicted_gravity
+    name: Final Gravity
+
+  - entity: sensor.tipsylab_batch1_points_remaining
+    name: Points Remaining
+
+  - entity: sensor.tipsylab_batch1_predicted_pressure
+    name: Expected Pressure
+
+  - entity: binary_sensor.tipsylab_batch1_bottling_window
+    name: Ready to Bottle?
+
+  - entity: sensor.tipsylab_batch1_bottling_window_closes
+    name: Bottle By
+    icon: mdi:clock-alert
+
+  - type: button
+    name: Mark as Bottled
+    tap_action:
+      action: call-service
+      service: tipsyhomelab.mark_bottled
+      service_data:
+        batch_id: batch1
+
+# ============================================================================
+# MARKDOWN CARD - Instructions
+# ============================================================================
+# Display guidance and instructions
+type: markdown
+title: Fermentation Guide
+content: |
+  ## Current Status
+  **{{ states('sensor.tipsylab_batch1_state') }}**
+
+  ### Bubble Rate: {{ states('sensor.tipsylab_batch1_bubble_rate') }} /min
+
+  {% if states('sensor.tipsylab_batch1_bubble_rate')|float > 60 %}
+  🔥 **Peak Activity** - Monitor closely for overflow
+  {% elif states('sensor.tipsylab_batch1_bubble_rate')|float > 20 %}
+  ✅ **Active Fermentation** - All good!
+  {% elif states('sensor.tipsylab_batch1_bubble_rate')|float > 5 %}
+  📉 **Slowing Down** - Nearly complete
+  {% else %}
+  ⏸️ **Minimal Activity** - Check if complete
+  {% endif %}
+
+  ### Gravity: {{ states('sensor.tipsylab_batch1_gravity') }} SG
+
+  - **Started:** {{ states('sensor.tipsylab_batch1_original_gravity') }} SG
+  - **Current:** {{ states('sensor.tipsylab_batch1_gravity') }} SG
+  - **Target:** {{ states('sensor.tipsylab_batch1_target_gravity') }} SG
+  - **Attenuation:** {{ states('sensor.tipsylab_batch1_attenuation') }}%
+
+  ### Predictions
+  - **Completion:** {{ states('sensor.tipsylab_batch1_predicted_completion') }}
+  - **Final Gravity:** {{ states('sensor.tipsylab_batch1_predicted_gravity') }} SG
+  - **Bottle Pressure:** {{ states('sensor.tipsylab_batch1_predicted_pressure') }} bar
+
+  {% if is_state('binary_sensor.tipsylab_batch1_bottling_window', 'on') %}
+  ## 🍾 READY TO BOTTLE!
+  Current conditions are perfect for bottling your Pet Nat.
+  Predicted pressure: {{ states('sensor.tipsylab_batch1_predicted_pressure') }} bar
+
+  **Bottle within:** {{ states('sensor.tipsylab_batch1_bottling_window_closes') }}
+  {% endif %}
+
+# ============================================================================
+# SENSOR HEALTH CARD
+# ============================================================================
+# Monitor sensor status and battery
+type: entities
+title: Sensor Health
+entities:
+  - entity: sensor.tipsylab_batch1_ispindel_battery
+    name: iSpindel Battery
+    icon: mdi:battery
+
+  - entity: sensor.tipsylab_batch1_ispindel_rssi
+    name: WiFi Signal
+    icon: mdi:wifi
+
+  - entity: sensor.tipsylab_batch1_last_update
+    name: Last Update
+    icon: mdi:clock
+
+  - entity: binary_sensor.tipsylab_batch1_sensors_online
+    name: All Sensors Online
+    icon: mdi:check-network
+
+# ============================================================================
+# CONDITIONAL CARDS
+# ============================================================================
+# Show/hide cards based on conditions
+
+# Show when bottling window is open
+type: conditional
+conditions:
+  - entity: binary_sensor.tipsylab_batch1_bottling_window
+    state: 'on'
+card:
+  type: markdown
+  title: 🍾 TIME TO BOTTLE!
+  content: |
+    Your Pet Nat is ready to bottle!
+
+    **Current Gravity:** {{ states('sensor.tipsylab_batch1_gravity') }} SG
+    **Predicted Pressure:** {{ states('sensor.tipsylab_batch1_predicted_pressure') }} bar
+
+    This will give you perfect carbonation. Don't wait too long!
+
+# Show when pressure is too high
+type: conditional
+conditions:
+  - entity: sensor.tipsylab_batch1_predicted_pressure
+    state_not: unavailable
+    condition: numeric_state
+    above: 5
+card:
+  type: markdown
+  title: ⚠️ WARNING - High Pressure
+  content: |
+    **DANGER: Predicted bottle pressure is TOO HIGH!**
+
+    Predicted: {{ states('sensor.tipsylab_batch1_predicted_pressure') }} bar
+
+    This exceeds safe limits. You should:
+    1. Bottle IMMEDIATELY if possible
+    2. OR wait for fermentation to complete (flat wine)
+    3. DO NOT bottle at current gravity
+
+# ============================================================================
+# MULTI-BATCH DASHBOARD
+# ============================================================================
+# Monitor multiple fermentations
+type: vertical-stack
+cards:
+  - type: markdown
+    title: Active Fermentations
+    content: |
+      ## Overview
+      Monitoring {{ states.sensor | selectattr('entity_id', 'search', 'tipsylab.*state') | list | count }} active batches
+
+  - type: entities
+    title: Fermenter 1 - Pet Nat
+    entities:
+      - sensor.tipsylab_batch1_state
+      - sensor.tipsylab_batch1_bubble_rate
+      - sensor.tipsylab_batch1_gravity
+      - sensor.tipsylab_batch1_days_remaining
+
+  - type: entities
+    title: Fermenter 2 - IPA
+    entities:
+      - sensor.tipsylab_batch2_state
+      - sensor.tipsylab_batch2_bubble_rate
+      - sensor.tipsylab_batch2_gravity
+      - sensor.tipsylab_batch2_days_remaining
+
+# ============================================================================
+# MOBILE-FRIENDLY COMPACT VIEW
+# ============================================================================
+# Simplified view optimized for mobile
+type: glance
+title: Quick Status
+entities:
+  - entity: sensor.tipsylab_batch1_bubble_rate
+    name: Activity
+
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Gravity
+
+  - entity: sensor.tipsylab_batch1_temperature
+    name: Temp
+
+  - entity: sensor.tipsylab_batch1_days_remaining
+    name: Days Left
+
+  - entity: binary_sensor.tipsylab_batch1_bottling_window
+    name: Bottle?
+
+# ============================================================================
+# BUTTON CARD (requires custom:button-card from HACS)
+# ============================================================================
+# If you have button-card installed
+type: custom:button-card
+entity: sensor.tipsylab_batch1_state
+name: Fermentation Status
+show_state: true
+state:
+  - value: 'lag_phase'
+    color: rgb(68, 115, 158)
+    icon: mdi:timer-sand
+  - value: 'active_fermentation'
+    color: rgb(28, 128, 28)
+    icon: mdi:flask
+  - value: 'peak_fermentation'
+    color: rgb(255, 140, 0)
+    icon: mdi:fire
+  - value: 'slowing_fermentation'
+    color: rgb(200, 200, 50)
+    icon: mdi:trending-down
+  - value: 'complete'
+    color: rgb(100, 100, 100)
+    icon: mdi:check-circle
+
+# ============================================================================
+# MINI GRAPH CARD (requires custom:mini-graph-card from HACS)
+# ============================================================================
+# Compact historical graph
+type: custom:mini-graph-card
+entities:
+  - entity: sensor.tipsylab_batch1_bubble_rate
+    name: Bubble Rate
+    color: '#03a9f4'
+  - entity: sensor.tipsylab_batch1_gravity
+    name: Gravity
+    color: '#4caf50'
+    y_axis: secondary
+hours_to_show: 168
+points_per_hour: 2
+line_width: 2
+font_size: 75
+animate: true
+show:
+  labels: true
+  labels_secondary: true
+  points: false
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# Tips for dashboard customization:
+#
+# 1. Replace entity IDs with your actual entity IDs from TipsyHomeLab
+# 2. Customize colors, icons, and thresholds to your preference
+# 3. Add custom:button-card and custom:mini-graph-card via HACS for enhanced visuals
+# 4. Use conditional cards to show warnings only when needed
+# 5. Create separate views for each batch if monitoring multiple fermentations
+# 6. Use markdown cards for instructions and guidance
+# 7. Mobile users: use glance cards for compact views
+#
+# For more card types, see:
+# - https://www.home-assistant.io/dashboards/
+# - https://github.com/custom-cards (HACS custom cards)

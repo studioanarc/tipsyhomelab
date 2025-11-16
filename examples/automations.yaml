@@ -1,0 +1,344 @@
+# Wine Monitor - Example Home Assistant Automations
+#
+# Add these automations to your Home Assistant configuration to get
+# intelligent notifications and actions based on fermentation status.
+
+# ============================================================================
+# NOTIFICATION AUTOMATIONS
+# ============================================================================
+
+# Alert when fermentation appears to be stuck
+- id: wine_stuck_fermentation_alert
+  alias: Wine - Stuck Fermentation Alert
+  description: Alert when fermentation has stalled
+  trigger:
+    - platform: state
+      entity_id: sensor.wine_fermentation_status
+      to: "Stuck Fermentation"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "🍷 Wine Alert: Stuck Fermentation"
+        message: >
+          Your wine fermentation appears to be stuck.
+          No bubble activity detected for {{ states('sensor.wine_hours_since_last_bubble') }} hours.
+          Current gravity: {{ states('sensor.wine_gravity') }}
+        data:
+          priority: high
+          tag: wine_stuck
+          actions:
+            - action: VIEW_DETAILS
+              title: View Details
+
+# Alert when ready to bottle
+- id: wine_ready_to_bottle
+  alias: Wine - Ready to Bottle Notification
+  description: Notify when fermentation is complete
+  trigger:
+    - platform: state
+      entity_id: sensor.wine_fermentation_status
+      to: "Ready to Bottle"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "🍷 Wine Ready to Bottle!"
+        message: >
+          Your {{ state_attr('sensor.wine_fermentation_status', 'batch_name') }} is ready to bottle!
+          Final ABV: {{ states('sensor.wine_abv') }}%
+          Days fermented: {{ states('sensor.wine_days_fermenting') }}
+        data:
+          tag: wine_ready
+
+# Low battery warning for iSpindel
+- id: wine_ispindel_low_battery
+  alias: Wine - iSpindel Low Battery
+  description: Alert when iSpindel battery is low
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.wine_battery
+      below: 20
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "🔋 Wine Monitor - Low Battery"
+        message: >
+          iSpindel battery is at {{ states('sensor.wine_battery') }}%.
+          Consider recharging soon to avoid losing data.
+
+# Temperature out of range alert
+- id: wine_temperature_alert
+  alias: Wine - Temperature Out of Range
+  description: Alert when temperature is not optimal
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.wine_temperature
+      below: 15
+      id: temp_low
+    - platform: numeric_state
+      entity_id: sensor.wine_temperature
+      above: 30
+      id: temp_high
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "🌡️ Wine Temperature Alert"
+        message: >
+          {% if trigger.id == 'temp_low' %}
+          Temperature is too low: {{ states('sensor.wine_temperature') }}°C
+          Fermentation may slow or stop.
+          {% else %}
+          Temperature is too high: {{ states('sensor.wine_temperature') }}°C
+          Risk of off-flavors and stressed yeast.
+          {% endif %}
+        data:
+          priority: high
+
+# Daily fermentation summary
+- id: wine_daily_summary
+  alias: Wine - Daily Fermentation Summary
+  description: Send daily summary of fermentation progress
+  trigger:
+    - platform: time
+      at: "20:00:00"
+  condition:
+    - condition: state
+      entity_id: sensor.wine_fermentation_status
+      state: "Fermenting"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "🍷 Daily Wine Report"
+        message: >
+          **{{ state_attr('sensor.wine_fermentation_status', 'batch_name') }}**
+
+          Status: {{ states('sensor.wine_fermentation_status') }}
+          Bubble Rate: {{ states('sensor.wine_bubble_rate') }} bubbles/min
+          Gravity: {{ states('sensor.wine_gravity') }}
+          Temperature: {{ states('sensor.wine_temperature') }}°C
+          Days Fermenting: {{ states('sensor.wine_days_fermenting') }}
+          Estimated Bottling: {{ states('sensor.wine_bottling_prediction') }} days
+
+# ============================================================================
+# CONTROL AUTOMATIONS
+# ============================================================================
+
+# Automatic temperature control (requires smart heater/cooler)
+- id: wine_temperature_control_heating
+  alias: Wine - Temperature Control (Heating)
+  description: Turn on heater if temperature too low
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.wine_temperature
+      below: 18
+  condition:
+    - condition: state
+      entity_id: input_boolean.wine_auto_temperature_control
+      state: "on"
+  action:
+    - service: switch.turn_on
+      entity_id: switch.wine_fermenter_heater
+    - service: notify.mobile_app
+      data:
+        title: "🌡️ Wine Heater Activated"
+        message: "Temperature dropped to {{ states('sensor.wine_temperature') }}°C. Heater activated."
+
+- id: wine_temperature_control_cooling
+  alias: Wine - Temperature Control (Cooling)
+  description: Turn on cooler if temperature too high
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.wine_temperature
+      above: 25
+  condition:
+    - condition: state
+      entity_id: input_boolean.wine_auto_temperature_control
+      state: "on"
+  action:
+    - service: switch.turn_on
+      entity_id: switch.wine_fermenter_cooler
+    - service: notify.mobile_app
+      data:
+        title: "❄️ Wine Cooler Activated"
+        message: "Temperature rose to {{ states('sensor.wine_temperature') }}°C. Cooler activated."
+
+- id: wine_temperature_control_off
+  alias: Wine - Temperature Control (Normal)
+  description: Turn off heating/cooling when in optimal range
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.wine_temperature
+      above: 19
+      below: 24
+      for:
+        minutes: 15
+  action:
+    - service: switch.turn_off
+      entity_id:
+        - switch.wine_fermenter_heater
+        - switch.wine_fermenter_cooler
+
+# ============================================================================
+# DATA LOGGING AUTOMATIONS
+# ============================================================================
+
+# Log data to Google Sheets (requires custom component)
+- id: wine_log_to_sheets
+  alias: Wine - Log to Google Sheets
+  description: Log sensor data to Google Sheets every hour
+  trigger:
+    - platform: time_pattern
+      hours: "/1"
+  action:
+    - service: google_sheets.append_row
+      data:
+        config_entry: wine_fermentation_log
+        worksheet: Fermentation Data
+        data:
+          timestamp: "{{ now().isoformat() }}"
+          bubble_rate: "{{ states('sensor.wine_bubble_rate') }}"
+          gravity: "{{ states('sensor.wine_gravity') }}"
+          temperature: "{{ states('sensor.wine_temperature') }}"
+          battery: "{{ states('sensor.wine_battery') }}"
+          ph: "{{ states('sensor.wine_ph') }}"
+
+# Backup sensor data daily
+- id: wine_backup_data
+  alias: Wine - Backup Sensor Data
+  description: Create daily backup of sensor data
+  trigger:
+    - platform: time
+      at: "23:59:00"
+  action:
+    - service: wine_monitor.get_history
+      data:
+        sensor_type: all
+        hours: 24
+      response_variable: history_data
+    - service: notify.mobile_app
+      data:
+        title: "📊 Wine Data Backup Complete"
+        message: "Daily sensor data backup completed."
+
+# ============================================================================
+# REMINDER AUTOMATIONS
+# ============================================================================
+
+# Reminder to check airlock
+- id: wine_check_airlock_reminder
+  alias: Wine - Check Airlock Reminder
+  description: Weekly reminder to check and refill airlock
+  trigger:
+    - platform: time
+      at: "10:00:00"
+  condition:
+    - condition: time
+      weekday:
+        - sun
+    - condition: state
+      entity_id: sensor.wine_fermentation_status
+      state: "Fermenting"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "🍷 Wine Maintenance Reminder"
+        message: "Time to check and refill the airlock if needed."
+
+# Reminder to take gravity reading
+- id: wine_gravity_reading_reminder
+  alias: Wine - Gravity Reading Reminder
+  description: Remind to take manual gravity reading
+  trigger:
+    - platform: time
+      at: "09:00:00"
+  condition:
+    - condition: template
+      value_template: "{{ (now() - states.sensor.wine_gravity.last_changed).days >= 3 }}"
+    - condition: state
+      entity_id: sensor.wine_fermentation_status
+      state: "Fermenting"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "📏 Wine - Take Gravity Reading"
+        message: >
+          It's been {{ (now() - states.sensor.wine_gravity.last_changed).days }} days
+          since the last gravity reading. Consider taking a manual reading.
+
+# ============================================================================
+# ADVANCED AUTOMATIONS
+# ============================================================================
+
+# Detect fermentation anomalies using AI (requires custom integration)
+- id: wine_anomaly_detection
+  alias: Wine - Anomaly Detection
+  description: Use ML to detect unusual fermentation patterns
+  trigger:
+    - platform: state
+      entity_id: sensor.wine_bubble_rate
+    - platform: state
+      entity_id: sensor.wine_temperature
+    - platform: state
+      entity_id: sensor.wine_gravity
+  action:
+    - service: wine_monitor.detect_anomaly
+      data:
+        sensors:
+          - sensor.wine_bubble_rate
+          - sensor.wine_temperature
+          - sensor.wine_gravity
+      response_variable: anomaly_result
+    - condition: template
+      value_template: "{{ anomaly_result.anomaly_detected }}"
+    - service: notify.mobile_app
+      data:
+        title: "⚠️ Wine - Anomaly Detected"
+        message: >
+          Unusual pattern detected: {{ anomaly_result.message }}
+          Confidence: {{ anomaly_result.confidence }}%
+
+# Predictive bottling date adjustment
+- id: wine_update_bottling_prediction
+  alias: Wine - Update Bottling Prediction
+  description: Recalculate bottling date based on current trends
+  trigger:
+    - platform: time_pattern
+      hours: "/6"
+  condition:
+    - condition: state
+      entity_id: sensor.wine_fermentation_status
+      state: "Fermenting"
+  action:
+    - service: wine_monitor.calculate_bottling_date
+      data:
+        use_ml_model: true
+      response_variable: prediction
+    - service: notify.mobile_app
+      data:
+        title: "📅 Wine - Bottling Date Updated"
+        message: >
+          New estimated bottling date: {{ prediction.bottling_date }}
+          ({{ prediction.days_remaining }} days remaining)
+        data:
+          tag: bottling_prediction
+
+# ============================================================================
+# HELPER INPUT BOOLEANS (Add to configuration.yaml)
+# ============================================================================
+
+# input_boolean:
+#   wine_monitor_notifications:
+#     name: Wine Monitor Notifications
+#     icon: mdi:bell
+#
+#   wine_auto_temperature_control:
+#     name: Automatic Temperature Control
+#     icon: mdi:thermometer-auto
+#
+# input_number:
+#   wine_temperature_target:
+#     name: Target Temperature
+#     min: 15
+#     max: 30
+#     step: 0.5
+#     unit_of_measurement: "°C"
+#     icon: mdi:thermometer

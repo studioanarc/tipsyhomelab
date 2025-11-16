@@ -1,0 +1,111 @@
+{
+  "valid_messages": [
+    {
+      "name": "iSpindel001",
+      "ID": "12345678",
+      "token": "secret_token_123",
+      "angle": 45.23,
+      "temperature": 20.5,
+      "temp_units": "C",
+      "battery": 3.85,
+      "gravity": 1.050,
+      "interval": 900,
+      "RSSI": -65
+    },
+    {
+      "name": "iSpindel002",
+      "ID": "87654321",
+      "token": "secret_token_456",
+      "angle": 62.10,
+      "temperature": 18.2,
+      "temp_units": "C",
+      "battery": 4.10,
+      "gravity": 1.015,
+      "interval": 1800,
+      "RSSI": -58
+    },
+    {
+      "name": "iSpindel003",
+      "ID": "11223344",
+      "token": "secret_token_789",
+      "angle": 25.5,
+      "temperature": 22.8,
+      "temp_units": "C",
+      "battery": 3.92,
+      "gravity": 1.085,
+      "interval": 900,
+      "RSSI": -72
+    }
+  ],
+  "invalid_messages": [
+    {
+      "description": "Missing required field 'temperature'",
+      "message": {
+        "name": "iSpindel001",
+        "angle": 45.23,
+        "battery": 3.85,
+        "gravity": 1.050
+      }
+    },
+    {
+      "description": "Invalid temperature range",
+      "message": {
+        "name": "iSpindel001",
+        "temperature": -50.0,
+        "angle": 45.23,
+        "battery": 3.85,
+        "gravity": 1.050
+      }
+    },
+    {
+      "description": "Invalid gravity range",
+      "message": {
+        "name": "iSpindel001",
+        "temperature": 20.0,
+        "angle": 45.23,
+        "battery": 3.85,
+        "gravity": 0.500
+      }
+    },
+    {
+      "description": "Invalid battery voltage",
+      "message": {
+        "name": "iSpindel001",
+        "temperature": 20.0,
+        "angle": 45.23,
+        "battery": -1.0,
+        "gravity": 1.050
+      }
+    },
+    {
+      "description": "Malformed JSON",
+      "message": "{ invalid json",
+      "raw": true
+    }
+  ],
+  "mqtt_topics": {
+    "ispindel": "ispindel/{device_name}",
+    "ispindel_wildcard": "ispindel/+",
+    "examples": [
+      "ispindel/iSpindel001",
+      "ispindel/iSpindel002",
+      "ispindel/Fermenter_A"
+    ]
+  },
+  "calibration_data": {
+    "iSpindel001": {
+      "polynomial_coefficients": [
+        -0.00031,
+        0.0264,
+        0.557
+      ],
+      "angle_to_gravity_samples": [
+        {"angle": 25.0, "gravity": 1.085},
+        {"angle": 35.0, "gravity": 1.065},
+        {"angle": 45.0, "gravity": 1.050},
+        {"angle": 55.0, "gravity": 1.030},
+        {"angle": 65.0, "gravity": 1.010}
+      ]
+    }
+  }
+}

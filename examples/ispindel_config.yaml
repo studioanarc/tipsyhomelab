@@ -1,0 +1,208 @@
+# iSpindel + Bubble Counter Configuration
+#
+# This configuration includes both bubble counter and iSpindel for
+# comprehensive fermentation monitoring. This is the recommended setup
+# for Pet Nat production as it provides:
+# - Bubble rate tracking (timing)
+# - Specific gravity measurements (sugar consumption)
+# - Temperature monitoring
+# - Accurate predictions
+#
+# Hardware needed:
+# - iSpindel (DIY or purchased)
+# - Bubble counter (optical or acoustic)
+# - MQTT broker
+
+tipsyhomelab:
+  # MQTT Connection
+  mqtt:
+    broker: localhost
+    port: 1883
+    username: !secret mqtt_username
+    password: !secret mqtt_password
+
+    # Optional: MQTT advanced settings
+    # qos: 1  # Quality of Service (0, 1, or 2)
+    # client_id: tipsyhomelab  # MQTT client identifier
+
+  # Global Settings
+  unit_system: metric  # or imperial
+  # timezone: America/New_York  # Optional: Override system timezone
+
+  # Batch Configuration
+  batches:
+    - name: "Pet Nat Spring 2024"
+
+      # Batch Metadata
+      type: petnat
+      started: "2024-11-01"  # ISO format: YYYY-MM-DD
+      volume: 20  # Liters (or gallons if imperial)
+
+      # Starting Values
+      original_gravity: 1.055  # Record this when you start fermentation!
+
+      # Target Values (for Pet Nat)
+      target_gravity: 1.004  # Bottle when you reach this
+      target_pressure: 3.5  # bar (desired bottle pressure)
+      target_co2: 7.0  # g/L (alternative to pressure)
+
+      # Bottle Configuration (important for pressure calculations)
+      bottle_volume: 750  # mL
+      bottle_type: champagne  # Options: champagne, beer, custom
+      headspace: 25  # mL (typical headspace)
+
+      # Safety Limits (alerts when exceeded)
+      max_pressure: 5.0  # bar (alert threshold)
+      max_temperature: 25  # Celsius
+      min_temperature: 12  # Celsius
+
+      # Sensors
+      sensors:
+        # Bubble Counter
+        bubble_counter:
+          topic: "tipsylab/batch1/bubbles"
+          # Optional settings:
+          rate_window: 300  # Calculate rate over 5 minutes
+          smoothing: true  # Apply moving average filter
+          smoothing_window: 10  # Number of readings to average
+
+        # iSpindel
+        ispindel:
+          topic: "ispindel/batch1"  # iSpindel publishes here
+
+          # IMPORTANT: Calibration Coefficients
+          # Get these from iSpindel calibration spreadsheet:
+          # https://docs.google.com/spreadsheets/d/1kGY0WaFbNLkVoS88VVLdAVhQO5Cxp6FvVKP1kAFPRhc/
+          calibration:
+            # Polynomial: Gravity = a*angle³ + b*angle² + c*angle + d
+            - 0.00001217   # a (angle³ coefficient)
+            - -0.0064      # b (angle² coefficient)
+            - 0.0912       # c (angle coefficient)
+            - 0.9994       # d (constant)
+          # These are example values - USE YOUR OWN from calibration!
+
+          # Temperature compensation
+          temp_compensation: true
+          reference_temp: 20  # Celsius (calibration temperature)
+
+          # Battery monitoring
+          battery_alert: 3.7  # Alert when voltage drops below (V)
+          battery_critical: 3.5  # Critical alert threshold
+
+          # Update interval (should match iSpindel config)
+          expected_interval: 900  # seconds (15 minutes)
+          stale_timeout: 1800  # Mark as stale if no update for 30 min
+
+        # Temperature (from iSpindel or separate sensor)
+        temperature:
+          topic: "ispindel/batch1"  # Same as iSpindel if using its temp sensor
+          # Or use separate DS18B20:
+          # topic: "tipsylab/batch1/temp"
+
+          # Optional: Temperature calibration
+          offset: 0.0  # Add/subtract from reading
+          smoothing: true
+          smoothing_window: 5
+
+      # Predictions
+      predictions:
+        enabled: true
+
+        # Model selection
+        model: auto  # Options: auto, linear, polynomial, gradient_boosting, lstm
+
+        # Minimum data requirements
+        min_data_points: 48  # Hours of data needed before predictions
+
+        # Update frequency
+        update_interval: 3600  # Recalculate every hour
+
+        # For advanced users: Model parameters
+        # parameters:
+        #   algorithm: gradient_boosting
+        #   learning_rate: 0.1
+        #   n_estimators: 100
+
+      # Alerts
+      alerts:
+        enabled: true
+
+        # Notification channels
+        channels:
+          - notify.mobile_app  # Replace with your notification service
+          # - notify.email
+          # - notify.pushover
+
+        # Alert conditions
+        conditions:
+          # Fermentation lifecycle
+          - type: fermentation_started
+            enabled: true
+
+          - type: fermentation_slowing
+            enabled: true
+            threshold: 10  # bubbles/min
+
+          - type: fermentation_complete
+            enabled: true
+            threshold: 2  # bubbles/min sustained for 24 hours
+
+          # Pet Nat specific
+          - type: bottling_window_open
+            enabled: true
+            advance_notice: 24  # hours (notify 24h before)
+
+          - type: bottling_window_closing
+            enabled: true
+            advance_notice: 12  # hours
+
+          # Safety alerts
+          - type: pressure_high
+            enabled: true
+            threshold: 4.5  # bar (warning level)
+            critical_threshold: 5.0  # bar (critical level)
+
+          - type: temperature_high
+            enabled: true
+            threshold: 25  # Celsius
+            duration: 1800  # seconds (30 minutes)
+
+          - type: temperature_low
+            enabled: true
+            threshold: 12  # Celsius
+            duration: 3600  # seconds (1 hour)
+
+          # Sensor health
+          - type: sensor_offline
+            enabled: true
+            timeout: 3600  # seconds (1 hour)
+            sensors:
+              - ispindel
+
+          - type: battery_low
+            enabled: true
+            threshold: 3.7  # volts
+            sensors:
+              - ispindel
+
+# Secrets.yaml should contain:
+# mqtt_username: your_mqtt_username
+# mqtt_password: your_mqtt_password
+
+# Next Steps:
+# 1. Calibrate your iSpindel and update calibration coefficients above
+# 2. Configure iSpindel to publish to MQTT (topic: ispindel/batch1)
+# 3. Set up your bubble counter (topic: tipsylab/batch1/bubbles)
+# 4. Update notification channels (replace notify.mobile_app)
+# 5. Restart Home Assistant
+# 6. Start fermentation and monitor!
+
+# Tips:
+# - Test sensors before fermentation starts
+# - Record original gravity accurately (crucial for predictions)
+# - Keep temperature stable for best results
+# - Monitor dashboard during first 24-48 hours to verify everything works
+
+# See full_config.yaml for all available options
+# See docs/SENSORS.md for detailed sensor setup
+# See docs/PETNAT_GUIDE.md for Pet Nat production guide

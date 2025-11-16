@@ -1,0 +1,575 @@
+/**
+ * Wine Monitor Card - Mushroom-Inspired Styles
+ *
+ * This stylesheet provides Mushroom design language tokens and utilities
+ * for the Wine Monitor custom Lovelace card.
+ */
+
+/* ========================================
+   Color Palette - Mushroom Style
+   ======================================== */
+
+:root {
+  /* Primary Colors */
+  --wine-monitor-primary: #9c27b0;
+  --wine-monitor-primary-light: #ba68c8;
+  --wine-monitor-primary-dark: #7b1fa2;
+
+  /* Status Colors */
+  --wine-monitor-green: #4caf50;
+  --wine-monitor-green-light: #81c784;
+  --wine-monitor-green-dark: #388e3c;
+
+  --wine-monitor-yellow: #ffc107;
+  --wine-monitor-yellow-light: #ffd54f;
+  --wine-monitor-yellow-dark: #ffa000;
+
+  --wine-monitor-red: #f44336;
+  --wine-monitor-red-light: #e57373;
+  --wine-monitor-red-dark: #d32f2f;
+
+  --wine-monitor-blue: #2196f3;
+  --wine-monitor-blue-light: #64b5f6;
+  --wine-monitor-blue-dark: #1976d2;
+
+  /* Neutral Colors */
+  --wine-monitor-gray-50: #fafafa;
+  --wine-monitor-gray-100: #f5f5f5;
+  --wine-monitor-gray-200: #eeeeee;
+  --wine-monitor-gray-300: #e0e0e0;
+  --wine-monitor-gray-400: #bdbdbd;
+  --wine-monitor-gray-500: #9e9e9e;
+  --wine-monitor-gray-600: #757575;
+  --wine-monitor-gray-700: #616161;
+  --wine-monitor-gray-800: #424242;
+  --wine-monitor-gray-900: #212121;
+
+  /* Shadows */
+  --wine-monitor-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --wine-monitor-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --wine-monitor-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
+  --wine-monitor-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
+  --wine-monitor-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+
+  /* Border Radius */
+  --wine-monitor-radius-sm: 6px;
+  --wine-monitor-radius: 12px;
+  --wine-monitor-radius-lg: 16px;
+  --wine-monitor-radius-full: 9999px;
+
+  /* Spacing */
+  --wine-monitor-space-xs: 4px;
+  --wine-monitor-space-sm: 8px;
+  --wine-monitor-space: 12px;
+  --wine-monitor-space-md: 16px;
+  --wine-monitor-space-lg: 24px;
+  --wine-monitor-space-xl: 32px;
+
+  /* Typography */
+  --wine-monitor-font-size-xs: 11px;
+  --wine-monitor-font-size-sm: 12px;
+  --wine-monitor-font-size: 14px;
+  --wine-monitor-font-size-md: 16px;
+  --wine-monitor-font-size-lg: 20px;
+  --wine-monitor-font-size-xl: 24px;
+  --wine-monitor-font-size-2xl: 32px;
+
+  --wine-monitor-font-weight-normal: 400;
+  --wine-monitor-font-weight-medium: 500;
+  --wine-monitor-font-weight-semibold: 600;
+  --wine-monitor-font-weight-bold: 700;
+
+  /* Transitions */
+  --wine-monitor-transition-fast: 150ms ease;
+  --wine-monitor-transition: 250ms ease;
+  --wine-monitor-transition-slow: 350ms ease;
+
+  /* Z-index */
+  --wine-monitor-z-base: 1;
+  --wine-monitor-z-dropdown: 1000;
+  --wine-monitor-z-sticky: 1020;
+  --wine-monitor-z-fixed: 1030;
+  --wine-monitor-z-modal: 1050;
+  --wine-monitor-z-popover: 1060;
+  --wine-monitor-z-tooltip: 1070;
+}
+
+/* ========================================
+   Utility Classes
+   ======================================== */
+
+/* Flex utilities */
+.wine-flex {
+  display: flex;
+}
+
+.wine-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.wine-items-center {
+  align-items: center;
+}
+
+.wine-justify-center {
+  justify-content: center;
+}
+
+.wine-justify-between {
+  justify-content: space-between;
+}
+
+.wine-gap-xs {
+  gap: var(--wine-monitor-space-xs);
+}
+
+.wine-gap-sm {
+  gap: var(--wine-monitor-space-sm);
+}
+
+.wine-gap {
+  gap: var(--wine-monitor-space);
+}
+
+.wine-gap-md {
+  gap: var(--wine-monitor-space-md);
+}
+
+/* Spacing utilities */
+.wine-p-xs {
+  padding: var(--wine-monitor-space-xs);
+}
+
+.wine-p-sm {
+  padding: var(--wine-monitor-space-sm);
+}
+
+.wine-p {
+  padding: var(--wine-monitor-space);
+}
+
+.wine-p-md {
+  padding: var(--wine-monitor-space-md);
+}
+
+.wine-m-xs {
+  margin: var(--wine-monitor-space-xs);
+}
+
+.wine-m-sm {
+  margin: var(--wine-monitor-space-sm);
+}
+
+.wine-m {
+  margin: var(--wine-monitor-space);
+}
+
+.wine-m-md {
+  margin: var(--wine-monitor-space-md);
+}
+
+/* Text utilities */
+.wine-text-xs {
+  font-size: var(--wine-monitor-font-size-xs);
+}
+
+.wine-text-sm {
+  font-size: var(--wine-monitor-font-size-sm);
+}
+
+.wine-text {
+  font-size: var(--wine-monitor-font-size);
+}
+
+.wine-text-lg {
+  font-size: var(--wine-monitor-font-size-lg);
+}
+
+.wine-text-xl {
+  font-size: var(--wine-monitor-font-size-xl);
+}
+
+.wine-font-medium {
+  font-weight: var(--wine-monitor-font-weight-medium);
+}
+
+.wine-font-semibold {
+  font-weight: var(--wine-monitor-font-weight-semibold);
+}
+
+.wine-font-bold {
+  font-weight: var(--wine-monitor-font-weight-bold);
+}
+
+.wine-text-center {
+  text-align: center;
+}
+
+.wine-uppercase {
+  text-transform: uppercase;
+}
+
+.wine-tracking-wide {
+  letter-spacing: 0.5px;
+}
+
+/* Color utilities */
+.wine-text-primary {
+  color: var(--wine-monitor-primary);
+}
+
+.wine-text-green {
+  color: var(--wine-monitor-green);
+}
+
+.wine-text-yellow {
+  color: var(--wine-monitor-yellow);
+}
+
+.wine-text-red {
+  color: var(--wine-monitor-red);
+}
+
+.wine-text-blue {
+  color: var(--wine-monitor-blue);
+}
+
+.wine-bg-primary {
+  background-color: var(--wine-monitor-primary);
+}
+
+.wine-bg-green {
+  background-color: var(--wine-monitor-green);
+}
+
+.wine-bg-yellow {
+  background-color: var(--wine-monitor-yellow);
+}
+
+.wine-bg-red {
+  background-color: var(--wine-monitor-red);
+}
+
+/* Border utilities */
+.wine-rounded-sm {
+  border-radius: var(--wine-monitor-radius-sm);
+}
+
+.wine-rounded {
+  border-radius: var(--wine-monitor-radius);
+}
+
+.wine-rounded-lg {
+  border-radius: var(--wine-monitor-radius-lg);
+}
+
+.wine-rounded-full {
+  border-radius: var(--wine-monitor-radius-full);
+}
+
+/* Shadow utilities */
+.wine-shadow-sm {
+  box-shadow: var(--wine-monitor-shadow-sm);
+}
+
+.wine-shadow {
+  box-shadow: var(--wine-monitor-shadow);
+}
+
+.wine-shadow-md {
+  box-shadow: var(--wine-monitor-shadow-md);
+}
+
+.wine-shadow-lg {
+  box-shadow: var(--wine-monitor-shadow-lg);
+}
+
+/* ========================================
+   Component Styles
+   ======================================== */
+
+/* Mushroom-style chips */
+.wine-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wine-monitor-space-xs);
+  padding: 6px 12px;
+  border-radius: var(--wine-monitor-radius-full);
+  font-size: var(--wine-monitor-font-size-xs);
+  font-weight: var(--wine-monitor-font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all var(--wine-monitor-transition);
+  cursor: pointer;
+}
+
+.wine-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--wine-monitor-shadow-sm);
+}
+
+.wine-chip-green {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: var(--wine-monitor-green);
+}
+
+.wine-chip-yellow {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: var(--wine-monitor-yellow);
+}
+
+.wine-chip-red {
+  background-color: rgba(244, 67, 54, 0.15);
+  color: var(--wine-monitor-red);
+}
+
+.wine-chip-blue {
+  background-color: rgba(33, 150, 243, 0.15);
+  color: var(--wine-monitor-blue);
+}
+
+/* Mushroom-style cards */
+.wine-card {
+  background: var(--ha-card-background, white);
+  border-radius: var(--wine-monitor-radius);
+  padding: var(--wine-monitor-space-md);
+  box-shadow: var(--wine-monitor-shadow);
+  transition: all var(--wine-monitor-transition);
+}
+
+.wine-card:hover {
+  box-shadow: var(--wine-monitor-shadow-md);
+  transform: translateY(-2px);
+}
+
+.wine-card-compact {
+  padding: var(--wine-monitor-space);
+}
+
+/* Badges */
+.wine-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--wine-monitor-radius-full);
+  font-size: var(--wine-monitor-font-size-xs);
+  font-weight: var(--wine-monitor-font-weight-semibold);
+  background-color: var(--wine-monitor-red);
+  color: white;
+}
+
+.wine-badge-green {
+  background-color: var(--wine-monitor-green);
+}
+
+.wine-badge-yellow {
+  background-color: var(--wine-monitor-yellow);
+}
+
+/* Dividers */
+.wine-divider {
+  height: 1px;
+  background-color: var(--wine-monitor-gray-200);
+  margin: var(--wine-monitor-space-md) 0;
+}
+
+/* Icons */
+.wine-icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wine-icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.wine-icon-lg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Buttons */
+.wine-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--wine-monitor-space-sm);
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--wine-monitor-radius);
+  font-size: var(--wine-monitor-font-size);
+  font-weight: var(--wine-monitor-font-weight-medium);
+  cursor: pointer;
+  transition: all var(--wine-monitor-transition);
+  background-color: var(--wine-monitor-primary);
+  color: white;
+}
+
+.wine-button:hover {
+  background-color: var(--wine-monitor-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--wine-monitor-shadow-md);
+}
+
+.wine-button:active {
+  transform: translateY(0);
+}
+
+/* Progress bars */
+.wine-progress {
+  width: 100%;
+  height: 8px;
+  background-color: var(--wine-monitor-gray-200);
+  border-radius: var(--wine-monitor-radius-full);
+  overflow: hidden;
+}
+
+.wine-progress-bar {
+  height: 100%;
+  background-color: var(--wine-monitor-green);
+  border-radius: var(--wine-monitor-radius-full);
+  transition: width var(--wine-monitor-transition-slow);
+}
+
+/* ========================================
+   Animations
+   ======================================== */
+
+@keyframes wine-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes wine-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wine-bounce {
+  0%,
+  100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes wine-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes wine-slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.wine-animate-pulse {
+  animation: wine-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.wine-animate-spin {
+  animation: wine-spin 1s linear infinite;
+}
+
+.wine-animate-bounce {
+  animation: wine-bounce 1s infinite;
+}
+
+.wine-animate-fade-in {
+  animation: wine-fade-in 0.3s ease-in;
+}
+
+.wine-animate-slide-up {
+  animation: wine-slide-up 0.3s ease-out;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --wine-monitor-space: 8px;
+    --wine-monitor-space-md: 12px;
+    --wine-monitor-space-lg: 16px;
+  }
+
+  .wine-card {
+    padding: var(--wine-monitor-space);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
+   Dark Mode Support
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --wine-monitor-gray-50: #212121;
+    --wine-monitor-gray-100: #424242;
+    --wine-monitor-gray-200: #616161;
+    --wine-monitor-gray-300: #757575;
+    --wine-monitor-gray-400: #9e9e9e;
+    --wine-monitor-gray-500: #bdbdbd;
+    --wine-monitor-gray-600: #e0e0e0;
+    --wine-monitor-gray-700: #eeeeee;
+    --wine-monitor-gray-800: #f5f5f5;
+    --wine-monitor-gray-900: #fafafa;
+  }
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+
+@media print {
+  .wine-card {
+    box-shadow: none;
+    border: 1px solid var(--wine-monitor-gray-300);
+  }
+
+  .wine-animate-pulse,
+  .wine-animate-spin,
+  .wine-animate-bounce {
+    animation: none;
+  }
+}

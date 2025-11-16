@@ -1,0 +1,166 @@
+{
+  "valid_messages": [
+    {
+      "sensor_id": "bubble_001",
+      "timestamp": "2024-01-15T10:00:00Z",
+      "bubble_count": 0,
+      "interval_seconds": 60,
+      "bubble_rate_per_minute": 0.0,
+      "battery_percent": 95,
+      "signal_strength": -55
+    },
+    {
+      "sensor_id": "bubble_001",
+      "timestamp": "2024-01-16T10:00:00Z",
+      "bubble_count": 60,
+      "interval_seconds": 60,
+      "bubble_rate_per_minute": 60.0,
+      "battery_percent": 94,
+      "signal_strength": -57
+    },
+    {
+      "sensor_id": "bubble_001",
+      "timestamp": "2024-01-17T10:00:00Z",
+      "bubble_count": 75,
+      "interval_seconds": 60,
+      "bubble_rate_per_minute": 75.0,
+      "battery_percent": 93,
+      "signal_strength": -56
+    },
+    {
+      "sensor_id": "bubble_002",
+      "timestamp": "2024-01-15T10:00:00Z",
+      "bubble_count": 45,
+      "interval_seconds": 60,
+      "bubble_rate_per_minute": 45.0,
+      "battery_percent": 88,
+      "signal_strength": -62
+    }
+  ],
+  "invalid_messages": [
+    {
+      "description": "Negative bubble count",
+      "message": {
+        "sensor_id": "bubble_001",
+        "bubble_count": -5,
+        "interval_seconds": 60
+      }
+    },
+    {
+      "description": "Invalid interval",
+      "message": {
+        "sensor_id": "bubble_001",
+        "bubble_count": 60,
+        "interval_seconds": 0
+      }
+    },
+    {
+      "description": "Battery percentage out of range",
+      "message": {
+        "sensor_id": "bubble_001",
+        "bubble_count": 60,
+        "interval_seconds": 60,
+        "battery_percent": 150
+      }
+    }
+  ],
+  "time_series_data": [
+    {
+      "timestamp": "2024-01-15T10:00:00Z",
+      "bubble_rate": 0,
+      "phase": "lag"
+    },
+    {
+      "timestamp": "2024-01-15T22:00:00Z",
+      "bubble_rate": 45,
+      "phase": "early_active"
+    },
+    {
+      "timestamp": "2024-01-16T10:00:00Z",
+      "bubble_rate": 60,
+      "phase": "active"
+    },
+    {
+      "timestamp": "2024-01-17T10:00:00Z",
+      "bubble_rate": 75,
+      "phase": "active_peak"
+    },
+    {
+      "timestamp": "2024-01-18T10:00:00Z",
+      "bubble_rate": 65,
+      "phase": "active"
+    },
+    {
+      "timestamp": "2024-01-20T10:00:00Z",
+      "bubble_rate": 45,
+      "phase": "declining"
+    },
+    {
+      "timestamp": "2024-01-25T10:00:00Z",
+      "bubble_rate": 20,
+      "phase": "late"
+    },
+    {
+      "timestamp": "2024-02-01T10:00:00Z",
+      "bubble_rate": 8,
+      "phase": "finishing"
+    },
+    {
+      "timestamp": "2024-02-10T10:00:00Z",
+      "bubble_rate": 2,
+      "phase": "final"
+    },
+    {
+      "timestamp": "2024-02-15T10:00:00Z",
+      "bubble_rate": 0,
+      "phase": "complete"
+    }
+  ],
+  "mqtt_topics": {
+    "bubble_sensor": "bubble/{sensor_id}",
+    "bubble_wildcard": "bubble/+",
+    "examples": [
+      "bubble/bubble_001",
+      "bubble/bubble_002",
+      "bubble/fermenter_a"
+    ]
+  },
+  "fermentation_phases": {
+    "lag": {
+      "bubble_rate_range": [0, 5],
+      "description": "Initial phase, yeast adaptation"
+    },
+    "early_active": {
+      "bubble_rate_range": [5, 30],
+      "description": "Fermentation starting"
+    },
+    "active": {
+      "bubble_rate_range": [30, 60],
+      "description": "Active fermentation"
+    },
+    "active_peak": {
+      "bubble_rate_range": [60, 100],
+      "description": "Peak fermentation activity"
+    },
+    "declining": {
+      "bubble_rate_range": [20, 50],
+      "description": "Fermentation slowing down"
+    },
+    "late": {
+      "bubble_rate_range": [10, 20],
+      "description": "Late stage fermentation"
+    },
+    "finishing": {
+      "bubble_rate_range": [5, 10],
+      "description": "Nearly complete"
+    },
+    "final": {
+      "bubble_rate_range": [1, 5],
+      "description": "Final stages"
+    },
+    "complete": {
+      "bubble_rate_range": [0, 1],
+      "description": "Fermentation complete"
+    }
+  }
+}

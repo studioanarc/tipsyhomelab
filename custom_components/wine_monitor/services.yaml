@@ -1,0 +1,41 @@
+# Services for Wine Monitor integration
+
+get_history:
+  name: Get Sensor History
+  description: Retrieve historical data for a specific sensor
+  fields:
+    sensor_type:
+      name: Sensor Type
+      description: The type of sensor to get history for (e.g., bubble_rate, gravity, temperature)
+      required: true
+      example: "bubble_rate"
+      selector:
+        select:
+          options:
+            - "bubble_rate"
+            - "gravity"
+            - "temperature"
+            - "ph"
+            - "pressure"
+            - "abv"
+    hours:
+      name: Hours
+      description: Number of hours of history to retrieve
+      required: false
+      default: 24
+      example: 24
+      selector:
+        number:
+          min: 1
+          max: 168
+          unit_of_measurement: "hours"
+
+get_alerts:
+  name: Get Active Alerts
+  description: Retrieve all active alerts for the wine fermentation
+  fields: {}
+
+refresh_data:
+  name: Refresh Data
+  description: Force an immediate refresh of sensor data
+  fields: {}

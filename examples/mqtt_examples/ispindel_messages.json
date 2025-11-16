@@ -1,0 +1,342 @@
+/**
+ * iSpindel MQTT Message Examples
+ *
+ * iSpindel publishes comprehensive fermentation data including
+ * gravity, temperature, battery status, and WiFi signal.
+ *
+ * Topic: ispindel/{device_name} or custom topic
+ * QoS: 0 or 1
+ * Retained: true (recommended)
+ */
+
+// ============================================================================
+// STANDARD iSPINDEL MESSAGE
+// ============================================================================
+// This is the standard message format from iSpindel firmware
+{
+  "name": "iSpindel01",
+  "ID": 123456,
+  "angle": 45.3,
+  "temperature": 20.5,
+  "temp_units": "C",
+  "battery": 3.95,
+  "gravity": 1.042,
+  "interval": 900,
+  "RSSI": -65
+}
+
+// ============================================================================
+// FIELD DESCRIPTIONS
+// ============================================================================
+{
+  "name": "iSpindel01",  // Device name (set in iSpindel config)
+  "ID": 123456,  // Unique device ID (ESP chip ID)
+  "angle": 45.3,  // Tilt angle in degrees (25-85 typical range)
+  "temperature": 20.5,  // Temperature in Celsius or Fahrenheit
+  "temp_units": "C",  // "C" for Celsius, "F" for Fahrenheit
+  "battery": 3.95,  // Battery voltage (3.5-4.2V typical for Li-ion)
+  "gravity": 1.042,  // Specific gravity (calculated from angle using polynomial)
+  "interval": 900,  // Sleep interval in seconds (900 = 15 minutes)
+  "RSSI": -65  // WiFi signal strength in dBm (better than -70)
+}
+
+// ============================================================================
+// RAW ANGLE MESSAGE (No Calibration)
+// ============================================================================
+// If you haven't calibrated iSpindel yet, it may only send angle
+{
+  "name": "iSpindel01",
+  "ID": 123456,
+  "angle": 45.3,
+  "temperature": 20.5,
+  "temp_units": "C",
+  "battery": 4.05,
+  "interval": 900,
+  "RSSI": -58
+}
+// TipsyHomeLab will calculate gravity from angle using your calibration polynomial
+
+// ============================================================================
+// BATTERY WARNING EXAMPLE
+// ============================================================================
+// Battery getting low
+{
+  "name": "iSpindel01",
+  "ID": 123456,
+  "angle": 42.1,
+  "temperature": 19.8,
+  "temp_units": "C",
+  "battery": 3.65,  // Low battery (< 3.7V)
+  "gravity": 1.018,
+  "interval": 900,
+  "RSSI": -72  // Weak signal (< -70 dBm)
+}
+
+// ============================================================================
+// CRITICAL BATTERY EXAMPLE
+// ============================================================================
+// Battery critically low
+{
+  "name": "iSpindel01",
+  "ID": 123456,
+  "angle": 41.8,
+  "temperature": 19.6,
+  "temp_units": "C",
+  "battery": 3.48,  // Critical (< 3.5V) - will shut down soon
+  "gravity": 1.016,
+  "interval": 900,
+  "RSSI": -68
+}
+
+// ============================================================================
+// FAHRENHEIT TEMPERATURE
+// ============================================================================
+// Some users configure iSpindel to report in Fahrenheit
+{
+  "name": "iSpindel01",
+  "ID": 123456,
+  "angle": 44.7,
+  "temperature": 68.5,  // Fahrenheit
+  "temp_units": "F",
+  "battery": 3.92,
+  "gravity": 1.038,
+  "interval": 900,
+  "RSSI": -61
+}
+
+// ============================================================================
+// MULTIPLE iSPINDELS
+// ============================================================================
+// If monitoring multiple batches, each iSpindel publishes to its own topic
+
+// Fermenter 1
+// Topic: ispindel/fermenter1
+{
+  "name": "iSpindel01",
+  "ID": 123456,
+  "angle": 45.3,
+  "temperature": 20.5,
+  "temp_units": "C",
+  "battery": 3.95,
+  "gravity": 1.042,
+  "interval": 900,
+  "RSSI": -65
+}
+
+// Fermenter 2
+// Topic: ispindel/fermenter2
+{
+  "name": "iSpindel02",
+  "ID": 789012,
+  "angle": 38.2,
+  "temperature": 18.9,
+  "temp_units": "C",
+  "battery": 4.01,
+  "gravity": 1.015,
+  "interval": 900,
+  "RSSI": -58
+}
+
+// ============================================================================
+// iSPINDEL CALIBRATION DATA
+// ============================================================================
+// Not sent via MQTT, but stored in TipsyHomeLab config
+/*
+Configuration example:
+sensors:
+  ispindel:
+    topic: "ispindel/batch1"
+    calibration:
+      # These coefficients from calibration spreadsheet
+      # Gravity = a*angle³ + b*angle² + c*angle + d
+      - 0.00001217   # a (cubic term)
+      - -0.0064      # b (quadratic term)
+      - 0.0912       # c (linear term)
+      - 0.9994       # d (constant)
+
+Calibration process:
+1. Float iSpindel in distilled water (1.000 SG) - record angle
+2. Float in sugar solutions: 1.020, 1.040, 1.060, 1.080 - record angles
+3. Use calibration spreadsheet to calculate polynomial
+4. Enter coefficients in config
+*/
+
+// ============================================================================
+// TYPICAL FERMENTATION TIMELINE
+// ============================================================================
+/*
+Day 0 (Start):
+{
+  "angle": 25.4,
+  "temperature": 20.0,
+  "battery": 4.15,
+  "gravity": 1.055
+}
+
+Day 1 (Lag phase):
+{
+  "angle": 26.1,
+  "temperature": 20.5,
+  "battery": 4.12,
+  "gravity": 1.054
+}
+
+Day 3 (Active fermentation):
+{
+  "angle": 35.8,
+  "temperature": 21.2,
+  "battery": 4.05,
+  "gravity": 1.038
+}
+
+Day 5 (Peak activity):
+{
+  "angle": 48.3,
+  "temperature": 21.8,
+  "battery": 3.98,
+  "gravity": 1.022
+}
+
+Day 7 (Slowing):
+{
+  "angle": 58.2,
+  "temperature": 20.9,
+  "battery": 3.91,
+  "gravity": 1.010
+}
+
+Day 10 (Nearly complete):
+{
+  "angle": 68.4,
+  "temperature": 20.2,
+  "battery": 3.84,
+  "gravity": 1.002
+}
+
+Day 14 (Complete):
+{
+  "angle": 72.1,
+  "temperature": 19.8,
+  "battery": 3.77,
+  "gravity": 1.000
+}
+*/
+
+// ============================================================================
+// SIMULATING iSPINDEL FOR TESTING
+// ============================================================================
+/**
+ * Python script to simulate iSpindel messages
+ */
+/*
+import paho.mqtt.client as mqtt
+import json
+import time
+import random
+
+client = mqtt.Client()
+client.username_pw_set("tipsylab", "password")
+client.connect("localhost", 1883)
+
+def simulate_ispindel(day):
+    # Simulate fermentation progress
+    gravity_curve = {
+        0: 1.055,
+        1: 1.054,
+        3: 1.038,
+        5: 1.022,
+        7: 1.010,
+        10: 1.002,
+        14: 1.000
+    }
+
+    # Interpolate gravity
+    gravity = 1.055 - (day / 14) * 0.055
+    gravity = max(1.000, gravity)
+
+    # Calculate angle (reverse polynomial - approximate)
+    angle = 25 + (70 * (1.055 - gravity) / 0.055)
+
+    # Battery drain
+    battery = 4.15 - (day * 0.027)  # ~4 weeks battery life
+
+    # Temperature variation
+    temp = 20.0 + random.uniform(-1, 2)
+
+    message = {
+        "name": "iSpindel01",
+        "ID": 123456,
+        "angle": round(angle, 1),
+        "temperature": round(temp, 1),
+        "temp_units": "C",
+        "battery": round(battery, 2),
+        "gravity": round(gravity, 3),
+        "interval": 900,
+        "RSSI": random.randint(-75, -55)
+    }
+
+    client.publish(
+        "ispindel/test",
+        json.dumps(message),
+        qos=1,
+        retain=True
+    )
+
+    print(f"Day {day}: {message}")
+
+# Simulate 14 days of fermentation
+for day in range(15):
+    simulate_ispindel(day)
+    time.sleep(2)  # Publish every 2 seconds (sped up for testing)
+*/
+
+// ============================================================================
+// TROUBLESHOOTING
+// ============================================================================
+/*
+Common Issues:
+
+1. No messages received:
+   - Check iSpindel is connected to WiFi (LED blinking)
+   - Verify MQTT broker address in iSpindel config
+   - Check MQTT credentials
+   - Verify topic name matches configuration
+
+2. Wrong gravity readings:
+   - Calibration coefficients incorrect
+   - iSpindel stuck to fermenter wall
+   - Not floating properly (check weight)
+   - Temperature affecting calibration
+
+3. Frequent disconnects:
+   - Weak WiFi signal (RSSI < -75 dBm)
+   - Increase sleep interval to conserve battery
+   - Check broker connection limits
+   - Verify MQTT keep-alive settings
+
+4. Battery draining fast:
+   - WiFi connection issues (constantly retrying)
+   - Sleep interval too short (< 600 seconds)
+   - Old battery (replace after 1-2 years)
+   - Temperature too low (< 10°C)
+
+5. Inaccurate temperature:
+   - DS18B20 not in good contact with wort
+   - Temperature sensor damaged
+   - Need temperature calibration offset
+
+Testing:
+1. Subscribe to iSpindel topic:
+   mosquitto_sub -h localhost -u user -P pass -t 'ispindel/#' -v
+
+2. Verify messages arriving every 15 minutes (or your interval)
+
+3. Check values make sense:
+   - Angle: 25-85 degrees typical
+   - Gravity: 1.000-1.100 typical
+   - Battery: 3.5-4.2V
+   - Temperature: 10-30°C typical
+   - RSSI: Better than -80 dBm
+
+4. Monitor in Home Assistant entity
+*/

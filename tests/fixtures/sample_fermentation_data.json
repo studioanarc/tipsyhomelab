@@ -1,0 +1,188 @@
+{
+  "fermentation_batches": [
+    {
+      "batch_id": "batch_001",
+      "batch_name": "Chardonnay 2024",
+      "start_date": "2024-01-15T10:00:00Z",
+      "end_date": "2024-02-15T10:00:00Z",
+      "initial_gravity": 1.085,
+      "final_gravity": 1.010,
+      "target_gravity": 1.008,
+      "status": "completed",
+      "data_points": [
+        {
+          "timestamp": "2024-01-15T10:00:00Z",
+          "temperature": 20.5,
+          "gravity": 1.085,
+          "bubble_rate": 0,
+          "battery": 4.1,
+          "angle": 25.0,
+          "rssi": -45
+        },
+        {
+          "timestamp": "2024-01-15T22:00:00Z",
+          "temperature": 21.0,
+          "gravity": 1.080,
+          "bubble_rate": 45,
+          "battery": 4.0,
+          "angle": 27.5,
+          "rssi": -47
+        },
+        {
+          "timestamp": "2024-01-16T10:00:00Z",
+          "temperature": 21.5,
+          "gravity": 1.075,
+          "bubble_rate": 60,
+          "battery": 4.0,
+          "angle": 30.0,
+          "rssi": -46
+        },
+        {
+          "timestamp": "2024-01-17T10:00:00Z",
+          "temperature": 22.0,
+          "gravity": 1.065,
+          "bubble_rate": 75,
+          "battery": 3.9,
+          "angle": 35.0,
+          "rssi": -48
+        },
+        {
+          "timestamp": "2024-01-18T10:00:00Z",
+          "temperature": 21.8,
+          "gravity": 1.055,
+          "bubble_rate": 65,
+          "battery": 3.9,
+          "angle": 40.0,
+          "rssi": -47
+        },
+        {
+          "timestamp": "2024-01-20T10:00:00Z",
+          "temperature": 21.5,
+          "gravity": 1.040,
+          "bubble_rate": 45,
+          "battery": 3.8,
+          "angle": 48.0,
+          "rssi": -49
+        },
+        {
+          "timestamp": "2024-01-25T10:00:00Z",
+          "temperature": 21.0,
+          "gravity": 1.020,
+          "bubble_rate": 20,
+          "battery": 3.7,
+          "angle": 58.0,
+          "rssi": -50
+        },
+        {
+          "timestamp": "2024-02-01T10:00:00Z",
+          "temperature": 20.5,
+          "gravity": 1.015,
+          "bubble_rate": 8,
+          "battery": 3.6,
+          "angle": 62.0,
+          "rssi": -51
+        },
+        {
+          "timestamp": "2024-02-10T10:00:00Z",
+          "temperature": 20.0,
+          "gravity": 1.012,
+          "bubble_rate": 2,
+          "battery": 3.5,
+          "angle": 64.0,
+          "rssi": -52
+        },
+        {
+          "timestamp": "2024-02-15T10:00:00Z",
+          "temperature": 20.0,
+          "gravity": 1.010,
+          "bubble_rate": 0,
+          "battery": 3.5,
+          "angle": 65.0,
+          "rssi": -52
+        }
+      ]
+    },
+    {
+      "batch_id": "batch_002",
+      "batch_name": "Pinot Noir 2024",
+      "start_date": "2024-03-01T09:00:00Z",
+      "initial_gravity": 1.092,
+      "status": "active",
+      "data_points": [
+        {
+          "timestamp": "2024-03-01T09:00:00Z",
+          "temperature": 18.5,
+          "gravity": 1.092,
+          "bubble_rate": 0,
+          "battery": 4.2,
+          "angle": 23.0,
+          "rssi": -44
+        },
+        {
+          "timestamp": "2024-03-02T09:00:00Z",
+          "temperature": 19.0,
+          "gravity": 1.085,
+          "bubble_rate": 55,
+          "battery": 4.1,
+          "angle": 28.0,
+          "rssi": -45
+        },
+        {
+          "timestamp": "2024-03-03T09:00:00Z",
+          "temperature": 19.5,
+          "gravity": 1.078,
+          "bubble_rate": 70,
+          "battery": 4.1,
+          "angle": 33.0,
+          "rssi": -46
+        }
+      ]
+    }
+  ],
+  "ml_training_data": {
+    "features": [
+      "temperature",
+      "gravity",
+      "bubble_rate",
+      "time_elapsed_hours"
+    ],
+    "target": "completion_percentage",
+    "samples": [
+      {
+        "temperature": 20.5,
+        "gravity": 1.085,
+        "bubble_rate": 0,
+        "time_elapsed_hours": 0,
+        "completion_percentage": 0.0
+      },
+      {
+        "temperature": 21.5,
+        "gravity": 1.075,
+        "bubble_rate": 60,
+        "time_elapsed_hours": 24,
+        "completion_percentage": 13.3
+      },
+      {
+        "temperature": 21.8,
+        "gravity": 1.055,
+        "bubble_rate": 65,
+        "time_elapsed_hours": 72,
+        "completion_percentage": 40.0
+      },
+      {
+        "temperature": 21.0,
+        "gravity": 1.020,
+        "bubble_rate": 20,
+        "time_elapsed_hours": 240,
+        "completion_percentage": 86.7
+      },
+      {
+        "temperature": 20.0,
+        "gravity": 1.010,
+        "bubble_rate": 0,
+        "time_elapsed_hours": 744,
+        "completion_percentage": 100.0
+      }
+    ]
+  }
+}

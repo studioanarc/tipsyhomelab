@@ -1,0 +1,13 @@
+{
+  "domain": "wine_monitor",
+  "name": "Wine Monitor",
+  "codeowners": ["@tipsyhomelab"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/tipsyhomelab/wine-monitor",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/tipsyhomelab/wine-monitor/issues",
+  "requirements": ["aiohttp>=3.8.0"],
+  "version": "1.0.0"
+}

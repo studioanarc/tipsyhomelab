@@ -1,0 +1,644 @@
+# Complete TipsyHomeLab Configuration
+#
+# This file demonstrates ALL available configuration options.
+# Use this as a reference - most users don't need all of these!
+#
+# For typical use, see:
+# - minimal_config.yaml (bare minimum)
+# - ispindel_config.yaml (recommended Pet Nat setup)
+#
+# This configuration shows:
+# - Multiple batches
+# - All sensor types
+# - Advanced prediction settings
+# - InfluxDB integration
+# - Detailed alert configuration
+# - Performance tuning options
+
+tipsyhomelab:
+  # ============================================================================
+  # MQTT CONFIGURATION
+  # ============================================================================
+  mqtt:
+    # Basic connection
+    broker: localhost  # Hostname or IP
+    port: 1883  # Standard MQTT port (8883 for TLS)
+    username: !secret mqtt_username
+    password: !secret mqtt_password
+    client_id: tipsyhomelab  # Optional unique client ID
+
+    # Advanced MQTT settings
+    keepalive: 60  # Keep-alive interval in seconds
+    qos: 1  # Quality of Service (0=fire and forget, 1=at least once, 2=exactly once)
+    retain: true  # Retain messages for new subscribers
+
+    # TLS/SSL Configuration (optional, for secure connections)
+    # tls:
+    #   enabled: true
+    #   ca_cert: /config/certs/ca.crt
+    #   client_cert: /config/certs/client.crt
+    #   client_key: /config/certs/client.key
+    #   insecure: false  # Set true to skip certificate verification
+
+    # MQTT Discovery (Home Assistant auto-discovery)
+    discovery: true
+    discovery_prefix: homeassistant
+
+    # Last Will and Testament (notify if integration crashes)
+    will:
+      topic: tipsylab/status
+      payload: offline
+      qos: 1
+      retain: true
+
+    # Birth message (online notification)
+    birth:
+      topic: tipsylab/status
+      payload: online
+
+  # ============================================================================
+  # GLOBAL SETTINGS
+  # ============================================================================
+  unit_system: metric  # Options: metric, imperial
+  timezone: America/New_York  # Override system timezone
+  language: en  # Future: multi-language support
+
+  # ============================================================================
+  # BATCH CONFIGURATIONS
+  # ============================================================================
+  batches:
+    # -------------------------------------------------------------------------
+    # BATCH 1: Pet Nat with Full Sensor Suite
+    # -------------------------------------------------------------------------
+    - name: "Pet Nat Spring 2024"
+
+      # Metadata
+      type: petnat
+      started: "2024-11-01"
+      volume: 20  # liters
+      recipe_id: "recipe_001"  # Optional reference to recipe database
+
+      # Initial values
+      original_gravity: 1.055
+      original_ph: 3.4  # Optional
+
+      # Target values
+      target_gravity: 1.004
+      target_pressure: 3.5  # bar
+      target_co2: 7.0  # g/L
+      target_ph: 3.2  # Optional
+
+      # Bottle configuration
+      bottle_volume: 750  # mL
+      bottle_type: champagne
+      headspace: 25  # mL
+      bottles_count: 26  # Optional: track how many bottles
+
+      # Safety limits
+      max_pressure: 5.0  # bar
+      max_temperature: 25  # Celsius
+      min_temperature: 12
+      max_ph: 4.0
+      min_ph: 2.8
+
+      # Sensors
+      sensors:
+        # Bubble counter
+        bubble_counter:
+          topic: "tipsylab/petnat/bubbles"
+          rate_window: 300  # seconds
+          smoothing: true
+          smoothing_window: 10
+          min_interval: 100  # ms debounce
+          multiplier: 1.0  # Calibration multiplier
+
+        # iSpindel
+        ispindel:
+          topic: "ispindel/petnat"
+          calibration:
+            - 0.00001217
+            - -0.0064
+            - 0.0912
+            - 0.9994
+          temp_compensation: true
+          reference_temp: 20
+          battery_alert: 3.7
+          battery_critical: 3.5
+          expected_interval: 900
+          stale_timeout: 1800
+
+        # Temperature sensors (multiple)
+        temperature:
+          - name: wort_temp
+            topic: "tipsylab/petnat/temp/wort"
+            placement: wort
+            offset: 0.0
+            smoothing: true
+            smoothing_window: 5
+
+          - name: ambient_temp
+            topic: "tipsylab/petnat/temp/ambient"
+            placement: ambient
+            offset: 0.0
+
+        # Use wort temp for calculations
+        primary_temperature: wort_temp
+
+        # pH sensor
+        ph:
+          topic: "tipsylab/petnat/ph"
+          offset: 0.0
+          temp_compensation: true
+          compensation_slope: 0.003  # pH units per degree C
+          calibrated: true
+          last_calibration: "2024-11-01"
+          min_ph: 3.0
+          max_ph: 4.5
+
+        # Pressure sensor (for bottle conditioning)
+        pressure:
+          topic: "tipsylab/petnat/pressure"
+          sensor_type: transducer
+          max_range: 10.0  # bar
+          offset: 0.0
+          multiplier: 1.0
+          alert_threshold: 5.5
+          critical_threshold: 6.0
+
+      # Predictions
+      predictions:
+        enabled: true
+        model: gradient_boosting
+
+        # Model parameters
+        parameters:
+          algorithm: gradient_boosting
+          learning_rate: 0.1
+          n_estimators: 100
+          max_depth: 5
+          min_samples_split: 4
+
+        # Data requirements
+        min_data_points: 48  # hours
+        update_interval: 3600  # seconds
+
+        # Features to use
+        features:
+          - bubble_rate
+          - gravity
+          - temperature
+          - time_elapsed
+          - rate_of_change
+          - acceleration
+
+        # Prediction targets
+        targets:
+          completion_date: true
+          final_gravity: true
+          bottle_pressure: true
+          residual_sugar: true
+          abv: true
+
+        # Confidence intervals
+        confidence_level: 0.95  # 95% confidence
+
+        # Model training
+        retrain_interval: 86400  # Daily
+        training_window: 604800  # Use last 7 days
+        cross_validation: true
+        validation_split: 0.2
+
+        # Save models
+        save_model: true
+        model_path: /config/tipsyhomelab/models/
+
+        # Manual overrides (optional)
+        # overrides:
+        #   final_gravity: 1.002
+        #   completion_date: "2024-11-20"
+
+        # Adjustments (optional)
+        # adjustments:
+        #   completion_days_offset: 1
+        #   gravity_offset: 0.001
+
+      # Alerts
+      alerts:
+        enabled: true
+
+        # Notification channels
+        channels:
+          - service: notify.mobile_app
+            priority: high
+
+          - service: notify.email
+            priority: normal
+            recipient: brewer@example.com
+
+          # - service: notify.pushover
+          #   priority: emergency
+          #   user_key: !secret pushover_user
+          #   api_token: !secret pushover_token
+
+        # Alert conditions
+        conditions:
+          # Lifecycle events
+          - type: fermentation_started
+            enabled: true
+            message: "Fermentation has started!"
+
+          - type: lag_phase_complete
+            enabled: true
+
+          - type: peak_fermentation
+            enabled: true
+            message: "Fermentation is at peak activity!"
+
+          - type: fermentation_slowing
+            enabled: true
+            threshold: 10  # bubbles/min
+
+          - type: fermentation_complete
+            enabled: true
+            threshold: 2  # bubbles/min for 24 hours
+            duration: 86400  # seconds
+
+          # Pet Nat specific
+          - type: bottling_window_open
+            enabled: true
+            advance_notice: 48  # hours
+            message: "Bottling window opens in 2 days!"
+
+          - type: bottling_window_optimal
+            enabled: true
+            message: "Perfect time to bottle!"
+
+          - type: bottling_window_closing
+            enabled: true
+            advance_notice: 12  # hours
+            message: "Last chance to bottle!"
+
+          # Temperature alerts
+          - type: temperature_high
+            enabled: true
+            threshold: 25
+            duration: 1800  # 30 minutes
+            repeat: 3600  # Repeat every hour
+            channels:
+              - notify.mobile_app
+            message: "Temperature too high: {temperature}°C"
+
+          - type: temperature_low
+            enabled: true
+            threshold: 12
+            duration: 3600
+
+          - type: temperature_fluctuation
+            enabled: true
+            threshold: 3  # degrees change per hour
+
+          # Pressure alerts
+          - type: pressure_high
+            enabled: true
+            threshold: 4.5
+            critical_threshold: 5.0
+            channels:
+              - notify.mobile_app
+              - notify.email
+            message: "WARNING: High pressure {pressure} bar!"
+
+          - type: pressure_critical
+            enabled: true
+            threshold: 5.5
+            channels:
+              - notify.mobile_app
+            priority: emergency
+            message: "DANGER: Critical pressure {pressure} bar! Take immediate action!"
+
+          # Activity alerts
+          - type: stuck_fermentation
+            enabled: true
+            detection:
+              max_bubble_rate: 5  # Less than 5 bubbles/min
+              duration: 21600  # For 6 hours
+              min_gravity: 1.020  # But gravity still high
+
+          - type: rapid_fermentation
+            enabled: true
+            threshold: 100  # bubbles/min
+            message: "Very active fermentation - check for overflow"
+
+          # Sensor health
+          - type: sensor_offline
+            enabled: true
+            timeout: 3600
+            sensors:
+              - ispindel
+              - bubble_counter
+              - temperature
+
+          - type: sensor_error
+            enabled: true
+            sensors:
+              - ispindel
+
+          - type: battery_low
+            enabled: true
+            threshold: 3.7
+            sensors:
+              - ispindel
+
+          - type: battery_critical
+            enabled: true
+            threshold: 3.5
+            sensors:
+              - ispindel
+
+          # pH alerts
+          - type: ph_high
+            enabled: true
+            threshold: 4.0
+
+          - type: ph_low
+            enabled: true
+            threshold: 3.0
+
+        # Quiet hours (don't send non-critical alerts)
+        quiet_hours:
+          enabled: true
+          start: "22:00"
+          end: "08:00"
+          exceptions:  # Still send these alerts
+            - pressure_critical
+            - temperature_critical
+
+        # Rate limiting
+        rate_limit:
+          max_alerts_per_hour: 10
+          cooldown_period: 300  # 5 minutes between same alert type
+
+        # Custom alert conditions (advanced)
+        custom_conditions:
+          - name: perfect_bottling_conditions
+            condition: |
+              {{ states('sensor.tipsylab_petnat_gravity')|float < 1.006 and
+                 states('sensor.tipsylab_petnat_gravity')|float > 1.002 and
+                 states('sensor.tipsylab_petnat_bubble_rate')|float < 20 and
+                 states('sensor.tipsylab_petnat_temperature')|float > 15 and
+                 states('sensor.tipsylab_petnat_temperature')|float < 22 }}
+            message: "All conditions perfect for bottling Pet Nat!"
+            channels:
+              - notify.mobile_app
+
+    # -------------------------------------------------------------------------
+    # BATCH 2: Simple Beer Fermentation
+    # -------------------------------------------------------------------------
+    - name: "IPA Batch 42"
+      type: beer
+      started: "2024-11-05"
+      volume: 20
+
+      original_gravity: 1.065
+      target_gravity: 1.012
+
+      sensors:
+        bubble_counter: "tipsylab/beer/bubbles"
+        tilt:
+          topic: "tilt/orange"
+          color: orange
+          temp_units: F  # Tilt reports in Fahrenheit
+          convert_to: C  # Convert to Celsius
+          gravity_offset: 0.002
+          temp_offset: -1.0
+
+      predictions:
+        enabled: true
+        model: auto
+
+      alerts:
+        enabled: true
+        channels:
+          - notify.mobile_app
+        conditions:
+          - type: fermentation_complete
+
+    # -------------------------------------------------------------------------
+    # BATCH 3: Research/Experimental Setup
+    # -------------------------------------------------------------------------
+    - name: "Experimental Batch"
+      type: custom
+      started: "2024-11-10"
+      volume: 5
+
+      sensors:
+        bubble_counter: "tipsylab/experimental/bubbles"
+        temperature: "tipsylab/experimental/temp"
+        ph: "tipsylab/experimental/ph"
+
+      predictions:
+        enabled: false  # Too experimental for predictions
+
+      alerts:
+        enabled: false  # Manual monitoring only
+
+  # ============================================================================
+  # DATA STORAGE & INTEGRATION
+  # ============================================================================
+  data_storage:
+    # InfluxDB integration (for long-term storage and Grafana)
+    influxdb:
+      enabled: true
+      host: localhost
+      port: 8086
+      database: tipsyhomelab
+      username: !secret influxdb_user
+      password: !secret influxdb_pass
+
+      # Retention policy
+      retention_policy: autogen
+      retention_days: 365
+
+      # What to store
+      measurement: fermentation
+      fields:
+        - bubble_rate
+        - bubble_count
+        - gravity
+        - temperature
+        - ph
+        - pressure
+        - predictions
+        - fermentation_state
+
+      # Tags for filtering
+      tags:
+        - batch_name
+        - batch_type
+        - sensor_type
+
+      # Write batching
+      batch_size: 100
+      flush_interval: 10  # seconds
+
+    # CSV Export (backup and analysis)
+    csv_export:
+      enabled: true
+      path: /config/tipsyhomelab/exports/
+      interval: 86400  # Export daily
+      filename_template: "{batch_name}_{date}.csv"
+      include_predictions: true
+      include_metadata: true
+      compression: gzip  # Optional: gzip, zip, or none
+
+  # ============================================================================
+  # INTEGRATIONS
+  # ============================================================================
+  integrations:
+    # Grafana (visualization)
+    grafana:
+      enabled: true
+      url: http://localhost:3000
+      api_key: !secret grafana_api_key
+      dashboard_id: tipsyhomelab
+      auto_create_dashboard: true
+
+    # Brewersfriend (recipe management)
+    brewersfriend:
+      enabled: false
+      api_key: !secret brewersfriend_api_key
+      auto_import_recipes: true
+      sync_interval: 3600
+
+    # Brewfather (alternative recipe management)
+    brewfather:
+      enabled: false
+      user_key: !secret brewfather_user_key
+      api_key: !secret brewfather_api_key
+
+    # Node-RED (advanced automation)
+    nodered:
+      enabled: false
+      webhook_url: http://localhost:1880/tipsyhomelab
+
+  # ============================================================================
+  # LOGGING & DEBUGGING
+  # ============================================================================
+  logging:
+    # Log level
+    level: info  # Options: debug, info, warning, error, critical
+
+    # Component-specific logging
+    components:
+      sensors: debug
+      predictions: info
+      mqtt: warning
+      alerts: info
+
+    # Log file
+    log_file: /config/tipsyhomelab/tipsyhomelab.log
+    max_size: 10485760  # 10 MB
+    backup_count: 5
+    rotation: daily  # Options: daily, size, both
+
+    # Include timestamps
+    include_timestamp: true
+    timestamp_format: "%Y-%m-%d %H:%M:%S"
+
+    # Debug mode (verbose output)
+    debug_mode: false
+    debug_components:
+      - predictions
+      # - mqtt
+      # - sensors
+
+  # ============================================================================
+  # PERFORMANCE TUNING
+  # ============================================================================
+  performance:
+    # Update intervals
+    sensor_update_interval: 60  # seconds (how often to poll MQTT)
+    prediction_update_interval: 3600  # seconds (how often to recalculate)
+    dashboard_update_interval: 30  # seconds (UI refresh rate)
+
+    # Data retention (in Home Assistant database)
+    history_days: 90  # Keep 90 days in HA recorder
+
+    # Processing
+    batch_processing: true  # Process multiple sensors in parallel
+    async_operations: true  # Use async I/O
+    worker_threads: 2  # Number of background worker threads
+
+    # Memory limits
+    max_data_points: 100000  # Maximum historical data points per batch
+    data_compression: true  # Compress historical data
+    cache_predictions: true  # Cache prediction results
+    cache_ttl: 300  # Cache time-to-live in seconds
+
+    # Database optimization
+    database_optimize: true
+    optimize_interval: 86400  # Daily
+
+  # ============================================================================
+  # ADVANCED OPTIONS
+  # ============================================================================
+  advanced:
+    # Enable experimental features
+    experimental_features: false
+
+    # Features
+    features:
+      computer_vision: false  # Future: foam analysis
+      multi_batch_learning: true  # Learn from all batches
+      transfer_learning: true  # Use knowledge from previous batches
+      ensemble_predictions: true  # Combine multiple models
+
+    # API
+    api:
+      enabled: false
+      port: 8099
+      authentication: true
+      api_key: !secret tipsyhomelab_api_key
+
+    # Backup
+    backup:
+      enabled: true
+      path: /config/tipsyhomelab/backups/
+      interval: 86400  # Daily
+      keep_backups: 7  # Keep last 7 days
+      include_models: true
+      include_data: true
+
+# ============================================================================
+# SECRETS.YAML SHOULD CONTAIN:
+# ============================================================================
+# mqtt_username: your_mqtt_username
+# mqtt_password: your_mqtt_password
+# influxdb_user: influxdb_username
+# influxdb_pass: influxdb_password
+# grafana_api_key: your_grafana_key
+# brewersfriend_api_key: your_brewersfriend_key
+# brewfather_user_key: your_brewfather_user_key
+# brewfather_api_key: your_brewfather_api_key
+# pushover_user: your_pushover_user_key
+# pushover_token: your_pushover_api_token
+# tipsyhomelab_api_key: random_secure_string
+
+# ============================================================================
+# NOTES:
+# ============================================================================
+# This configuration demonstrates ALL available options. Most users should:
+# 1. Start with minimal_config.yaml or ispindel_config.yaml
+# 2. Add options as needed
+# 3. Refer to this file for advanced features
+#
+# For documentation on each option, see:
+# - docs/CONFIGURATION.md (detailed explanations)
+# - docs/SENSORS.md (sensor-specific settings)
+# - docs/ML_MODELS.md (prediction settings)
+# - docs/API.md (MQTT API reference)
+#
+# Performance Tips:
+# - Use longer update intervals for better performance
+# - Disable features you don't need
+# - Use InfluxDB for long-term data (not Home Assistant recorder)
+# - Enable data compression if storing lots of historical data

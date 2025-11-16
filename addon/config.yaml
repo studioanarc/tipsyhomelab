@@ -1,0 +1,135 @@
+name: Wine Fermentation Monitor
+version: 1.0.0
+slug: wine_fermentation_monitor
+description: Advanced wine fermentation monitoring with ML-powered predictions and alerts
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+init: false
+startup: application
+boot: auto
+hassio_api: true
+hassio_role: default
+homeassistant_api: true
+auth_api: true
+
+# Port configuration
+ports:
+  8099/tcp: 8099
+
+# Port descriptions
+ports_description:
+  8099/tcp: Health check endpoint
+
+# Options schema
+options:
+  mqtt:
+    host: core-mosquitto
+    port: 1883
+    username: ""
+    password: ""
+    discovery_prefix: homeassistant
+    base_topic: wine/fermentation
+  sensors:
+    temperature:
+      enabled: true
+      topic: wine/sensors/temperature
+      device_class: temperature
+      unit: "°C"
+    specific_gravity:
+      enabled: true
+      topic: wine/sensors/sg
+      device_class: ""
+      unit: "SG"
+    ph:
+      enabled: true
+      topic: wine/sensors/ph
+      device_class: ""
+      unit: "pH"
+    pressure:
+      enabled: false
+      topic: wine/sensors/pressure
+      device_class: pressure
+      unit: "kPa"
+  ml:
+    enabled: true
+    prediction_interval: 3600
+    model_retrain_days: 7
+    min_samples_for_training: 100
+  alerts:
+    enabled: true
+    temperature_min: 18.0
+    temperature_max: 28.0
+    sg_stuck_threshold: 0.001
+    sg_stuck_hours: 48
+    ph_min: 2.8
+    ph_max: 4.0
+  logging:
+    level: INFO
+    structured: true
+
+# Schema for options
+schema:
+  mqtt:
+    host: str
+    port: port
+    username: str?
+    password: password?
+    discovery_prefix: str
+    base_topic: str
+  sensors:
+    temperature:
+      enabled: bool
+      topic: str
+      device_class: str
+      unit: str
+    specific_gravity:
+      enabled: bool
+      topic: str
+      device_class: str
+      unit: str
+    ph:
+      enabled: bool
+      topic: str
+      device_class: str
+      unit: str
+    pressure:
+      enabled: bool
+      topic: str
+      device_class: str
+      unit: str
+  ml:
+    enabled: bool
+    prediction_interval: int
+    model_retrain_days: int
+    min_samples_for_training: int
+  alerts:
+    enabled: bool
+    temperature_min: float
+    temperature_max: float
+    sg_stuck_threshold: float
+    sg_stuck_hours: int
+    ph_min: float
+    ph_max: float
+  logging:
+    level: list(DEBUG|INFO|WARNING|ERROR|CRITICAL)
+    structured: bool
+
+# Image configuration
+image: ghcr.io/tipsyhomelab/wine-fermentation-monitor-{arch}
+
+# Service discovery
+discovery:
+  - mqtt
+
+# Map folders
+map:
+  - config:rw
+  - share:rw
+  - ssl:ro
+
+# Watchdog (health check)
+watchdog: http://localhost:8099/health

@@ -1,0 +1,237 @@
+/**
+ * Bubble Counter MQTT Message Examples
+ *
+ * These are example JSON payloads for bubble counter sensors.
+ * Use these formats when implementing custom bubble counters.
+ *
+ * Topic: tipsylab/{batch_id}/bubbles
+ * QoS: 1 (recommended)
+ * Retained: true (recommended)
+ */
+
+// ============================================================================
+// MINIMAL MESSAGE
+// ============================================================================
+// Bare minimum required fields
+{
+  "count": 1,
+  "timestamp": 1699999999000
+}
+
+// ============================================================================
+// STANDARD MESSAGE
+// ============================================================================
+// Recommended format with calculated bubble rate
+{
+  "count": 1234,
+  "timestamp": 1699999999000,
+  "interval": 1250,  // milliseconds since last bubble
+  "rate": 48.0  // bubbles per minute
+}
+
+// ============================================================================
+// DETAILED MESSAGE
+// ============================================================================
+// Full message with all optional fields
+{
+  "count": 1234,
+  "timestamp": 1699999999000,
+  "interval": 1250,
+  "rate": 48.0,
+  "sensor_id": "bubble_counter_1",
+  "raw_value": 523,  // Optional: raw sensor reading
+  "threshold": 512,  // Optional: detection threshold
+  "wifi_rssi": -65,  // Optional: WiFi signal strength (dBm)
+  "uptime": 3600000  // Optional: sensor uptime in milliseconds
+}
+
+// ============================================================================
+// MULTIPLE BUBBLE EVENT
+// ============================================================================
+// If sensor batches multiple bubbles
+{
+  "count": 1237,
+  "timestamp": 1699999999000,
+  "bubbles": [
+    {"timestamp": 1699999997000, "interval": 1100},
+    {"timestamp": 1699999998200, "interval": 1200},
+    {"timestamp": 1699999999000, "interval": 800}
+  ],
+  "rate": 52.3
+}
+
+// ============================================================================
+// ERROR CONDITION
+// ============================================================================
+// Report sensor errors
+{
+  "count": 1234,
+  "timestamp": 1699999999000,
+  "error": true,
+  "error_code": "SENSOR_UNRELIABLE",
+  "error_message": "Ambient light too high",
+  "raw_value": 950  // Out of expected range
+}
+
+// ============================================================================
+// CALIBRATION MODE
+// ============================================================================
+// Special message during calibration
+{
+  "count": 0,
+  "timestamp": 1699999999000,
+  "calibration_mode": true,
+  "baseline": 500,  // Baseline reading (no bubble)
+  "bubble_reading": 300,  // Reading with bubble
+  "threshold": 400  // Calculated threshold
+}
+
+// ============================================================================
+// HISTORICAL BATCH
+// ============================================================================
+// Send multiple historical readings (if sensor was offline)
+{
+  "sensor_id": "bubble_counter_1",
+  "batch": [
+    {"count": 1230, "timestamp": 1699999990000, "rate": 45.0},
+    {"count": 1231, "timestamp": 1699999995000, "rate": 46.0},
+    {"count": 1232, "timestamp": 1699999998000, "rate": 47.0},
+    {"count": 1233, "timestamp": 1699999999000, "rate": 48.0}
+  ]
+}
+
+// ============================================================================
+// PUBLISHING EXAMPLES
+// ============================================================================
+
+/**
+ * Python Example (using paho-mqtt)
+ */
+/*
+import paho.mqtt.client as mqtt
+import json
+import time
+
+client = mqtt.Client()
+client.username_pw_set("tipsylab", "password")
+client.connect("localhost", 1883)
+
+def publish_bubble(count, interval=None, rate=None):
+    payload = {
+        "count": count,
+        "timestamp": int(time.time() * 1000)
+    }
+
+    if interval is not None:
+        payload["interval"] = interval
+
+    if rate is not None:
+        payload["rate"] = rate
+
+    client.publish(
+        "tipsylab/batch1/bubbles",
+        json.dumps(payload),
+        qos=1,
+        retain=True
+    )
+
+# Usage
+publish_bubble(1234, interval=1250, rate=48.0)
+*/
+
+/**
+ * Arduino/ESP8266 Example
+ */
+/*
+#include <ArduinoJson.h>
+
+void publishBubble(int count, unsigned long interval, float rate) {
+  StaticJsonDocument<200> doc;
+
+  doc["count"] = count;
+  doc["timestamp"] = millis();
+  doc["interval"] = interval;
+  doc["rate"] = rate;
+  doc["sensor_id"] = "bubble_counter_1";
+
+  char buffer[200];
+  serializeJson(doc, buffer);
+
+  client.publish("tipsylab/batch1/bubbles", buffer, true);
+}
+
+// Usage
+publishBubble(1234, 1250, 48.0);
+*/
+
+/**
+ * Command-line Example (mosquitto_pub)
+ */
+/*
+mosquitto_pub -h localhost -u tipsylab -P password \
+  -t 'tipsylab/batch1/bubbles' \
+  -m '{"count":1234,"timestamp":1699999999000,"rate":48.0}' \
+  -q 1 -r
+*/
+
+/**
+ * Node-RED Example (function node)
+ */
+/*
+msg.payload = {
+    count: flow.get('bubbleCount') || 0,
+    timestamp: Date.now(),
+    interval: flow.get('lastInterval') || 0,
+    rate: flow.get('bubbleRate') || 0
+};
+msg.topic = "tipsylab/batch1/bubbles";
+msg.qos = 1;
+msg.retain = true;
+return msg;
+*/
+
+// ============================================================================
+// SUBSCRIPTION EXAMPLES
+// ============================================================================
+
+/**
+ * Subscribe to bubble messages
+ */
+/*
+# Monitor all bubble messages
+mosquitto_sub -h localhost -u tipsylab -P password \
+  -t 'tipsylab/+/bubbles' -v
+
+# Monitor specific batch
+mosquitto_sub -h localhost -u tipsylab -P password \
+  -t 'tipsylab/batch1/bubbles' -v
+*/
+
+// ============================================================================
+// NOTES
+// ============================================================================
+/*
+Best Practices:
+1. Always include count and timestamp (minimum)
+2. Calculate rate if possible (helps TipsyHomeLab)
+3. Use QoS 1 for reliability
+4. Retain messages so new subscribers get latest state
+5. Include sensor_id if multiple sensors
+6. Report errors rather than failing silently
+7. Keep messages small (< 1KB)
+8. Publish at reasonable intervals (not every millisecond!)
+
+Common Issues:
+- Timestamp in wrong format (must be milliseconds, not seconds)
+- Missing required fields (count, timestamp)
+- Invalid JSON formatting
+- Rate calculated incorrectly (should be bubbles/minute)
+- Publishing too frequently (overwhelms broker)
+
+Testing:
+1. Publish test message via mosquitto_pub
+2. Subscribe to verify message received
+3. Check Home Assistant entity updates
+4. Monitor logs for errors
+5. Verify data in history graph
+*/

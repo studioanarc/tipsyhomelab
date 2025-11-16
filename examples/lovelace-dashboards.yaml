@@ -1,0 +1,309 @@
+# Wine Monitor - Example Lovelace Dashboard Configurations
+#
+# Copy and paste these examples into your Home Assistant Lovelace dashboard
+# configuration to get started quickly.
+
+# ============================================================================
+# EXAMPLE 1: Overview Dashboard (Recommended for most users)
+# ============================================================================
+
+title: Wine Fermentation
+views:
+  - title: Overview
+    path: overview
+    cards:
+      # Main Wine Monitor Card - Overview View
+      - type: custom:wine-monitor-card
+        name: My Pinot Noir 2024
+        view: overview
+        show_alerts: true
+        show_charts: true
+
+      # Quick Actions Card
+      - type: entities
+        title: Quick Actions
+        entities:
+          - entity: sensor.wine_fermentation_status
+          - entity: sensor.wine_bubble_rate
+          - entity: sensor.wine_bottling_prediction
+
+# ============================================================================
+# EXAMPLE 2: Detailed Multi-View Dashboard
+# ============================================================================
+
+title: Wine Monitor Pro
+views:
+  # Overview Tab
+  - title: Overview
+    path: overview
+    icon: mdi:glass-wine
+    cards:
+      - type: custom:wine-monitor-card
+        name: Wine Fermentation
+        view: overview
+        show_alerts: true
+        compact_mode: false
+
+  # Detailed Metrics Tab
+  - title: Metrics
+    path: metrics
+    icon: mdi:chart-line
+    cards:
+      - type: custom:wine-monitor-card
+        name: Detailed Metrics
+        view: detail
+        show_charts: true
+        show_alerts: false
+
+      # Individual Sensor Cards
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.wine_temperature
+            min: 10
+            max: 35
+            severity:
+              green: 15
+              yellow: 25
+              red: 30
+
+          - type: gauge
+            entity: sensor.wine_gravity
+            min: 0.990
+            max: 1.100
+            needle: true
+
+  # Historical Data Tab
+  - title: History
+    path: history
+    icon: mdi:history
+    cards:
+      - type: custom:wine-monitor-card
+        name: Historical Batches
+        view: historical
+
+      - type: history-graph
+        title: Temperature History
+        entities:
+          - entity: sensor.wine_temperature
+        hours_to_show: 168
+
+      - type: history-graph
+        title: Gravity History
+        entities:
+          - entity: sensor.wine_gravity
+        hours_to_show: 168
+
+  # Alerts Tab
+  - title: Alerts
+    path: alerts
+    icon: mdi:bell
+    cards:
+      - type: custom:wine-monitor-card
+        name: Alerts & Notifications
+        view: alerts
+        show_alerts: true
+
+# ============================================================================
+# EXAMPLE 3: Compact Mobile Dashboard
+# ============================================================================
+
+title: Wine Monitor Mobile
+views:
+  - title: Wine
+    path: wine
+    cards:
+      - type: custom:wine-monitor-card
+        name: Wine
+        view: overview
+        compact_mode: true
+        show_alerts: true
+        show_charts: false
+
+      # Sensor Grid
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: sensor
+            entity: sensor.wine_bubble_rate
+            graph: line
+            detail: 1
+
+          - type: sensor
+            entity: sensor.wine_temperature
+            graph: line
+            detail: 1
+
+          - type: sensor
+            entity: sensor.wine_gravity
+            graph: line
+            detail: 1
+
+          - type: sensor
+            entity: sensor.wine_battery
+            graph: line
+            detail: 1
+
+# ============================================================================
+# EXAMPLE 4: Multi-Batch Dashboard (for multiple fermentations)
+# ============================================================================
+
+title: Wine Cellar
+views:
+  - title: All Batches
+    path: batches
+    cards:
+      # Batch 1
+      - type: custom:wine-monitor-card
+        name: Pinot Noir 2024
+        view: overview
+        entity_prefix: wine_pinot
+        show_alerts: true
+
+      # Batch 2
+      - type: custom:wine-monitor-card
+        name: Chardonnay 2024
+        view: overview
+        entity_prefix: wine_chard
+        show_alerts: true
+
+      # Batch 3
+      - type: custom:wine-monitor-card
+        name: Cabernet Sauvignon 2024
+        view: overview
+        entity_prefix: wine_cab
+        show_alerts: true
+
+# ============================================================================
+# EXAMPLE 5: Advanced Dashboard with Automations
+# ============================================================================
+
+title: Wine Production
+views:
+  - title: Production
+    path: production
+    cards:
+      # Main Monitor
+      - type: custom:wine-monitor-card
+        name: Active Fermentation
+        view: detail
+        show_alerts: true
+        show_charts: true
+
+      # Automation Controls
+      - type: entities
+        title: Automation Controls
+        entities:
+          - entity: input_boolean.wine_monitor_notifications
+            name: Enable Notifications
+          - entity: input_number.wine_temperature_target
+            name: Target Temperature
+          - entity: automation.wine_stuck_fermentation_alert
+            name: Stuck Fermentation Alert
+          - entity: automation.wine_ready_to_bottle_notification
+            name: Ready to Bottle Alert
+
+      # Statistics
+      - type: markdown
+        content: |
+          ## Batch Statistics
+
+          **Started:** {{ state_attr('sensor.wine_fermentation_status', 'start_date') }}
+
+          **Current ABV:** {{ states('sensor.wine_abv') }}%
+
+          **Attenuation:** {{ states('sensor.wine_attenuation') }}%
+
+          **Days Fermenting:** {{ states('sensor.wine_days_fermenting') }}
+
+# ============================================================================
+# EXAMPLE 6: Mushroom Card Integration
+# ============================================================================
+
+title: Wine Monitor (Mushroom Style)
+views:
+  - title: Home
+    path: home
+    cards:
+      # Mushroom Title Card
+      - type: custom:mushroom-title-card
+        title: Wine Fermentation
+
+      # Wine Monitor Card
+      - type: custom:wine-monitor-card
+        name: Current Batch
+        view: overview
+
+      # Mushroom Chips for Quick Status
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: sensor.wine_fermentation_status
+            icon: mdi:information
+
+          - type: entity
+            entity: sensor.wine_bubble_rate
+            icon: mdi:water
+
+          - type: entity
+            entity: sensor.wine_temperature
+            icon: mdi:thermometer
+
+      # Mushroom Entity Cards
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.wine_gravity
+            icon: mdi:gauge
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.wine_battery
+            icon: mdi:battery
+
+# ============================================================================
+# CARD CONFIGURATION OPTIONS
+# ============================================================================
+
+# Available configuration options for wine-monitor-card:
+#
+# name: string (default: "Wine Monitor")
+#   - Display name for the card
+#
+# view: string (default: "overview")
+#   - Options: "overview", "detail", "historical", "alerts"
+#   - Determines which view to display
+#
+# show_alerts: boolean (default: true)
+#   - Show/hide alert notifications
+#
+# show_charts: boolean (default: true)
+#   - Show/hide trend charts
+#
+# compact_mode: boolean (default: false)
+#   - Reduce spacing for mobile/smaller displays
+#
+# entity_prefix: string (default: "wine")
+#   - Sensor entity prefix for multi-batch setups
+#   - Example: "wine_pinot" for sensor.wine_pinot_bubble_rate
+#
+# battery_threshold: number (default: 20)
+#   - Battery percentage to trigger low battery warning
+#
+# temp_min: number (default: 15)
+#   - Minimum temperature in °C
+#
+# temp_max: number (default: 30)
+#   - Maximum temperature in °C
+#
+# stuck_threshold: number (default: 24)
+#   - Hours without activity to trigger stuck fermentation alert
+#
+# update_interval: number (default: 60)
+#   - Seconds between data updates
+#
+# enable_animations: boolean (default: true)
+#   - Enable/disable animations
+#
+# debug: boolean (default: false)
+#   - Enable debug logging to console

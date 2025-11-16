@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Wine Monitor",
+        "description": "Configure your Wine Monitor integration. The API URL should point to your Wine Monitor backend service.\n\nExample: {example_url}",
+        "data": {
+          "name": "Name",
+          "api_url": "API URL",
+          "update_interval": "Update Interval (seconds)",
+          "webhook_id": "Webhook ID (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Wine Monitor API. Please check the URL and ensure the service is running.",
+      "invalid_data": "The API returned invalid data. Please check your Wine Monitor backend configuration.",
+      "unknown": "Unexpected error occurred. Please check the logs for more information."
+    },
+    "abort": {
+      "already_configured": "This Wine Monitor API URL is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Wine Monitor Options",
+        "description": "Configure options for Wine Monitor integration",
+        "data": {
+          "update_interval": "Update Interval (seconds)"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,116 @@
+configuration:
+  mqtt:
+    name: MQTT Configuration
+    description: MQTT broker connection settings
+  mqtt.host:
+    name: MQTT Host
+    description: Hostname or IP address of MQTT broker
+  mqtt.port:
+    name: MQTT Port
+    description: Port number for MQTT broker (default 1883)
+  mqtt.username:
+    name: Username
+    description: MQTT authentication username (optional)
+  mqtt.password:
+    name: Password
+    description: MQTT authentication password (optional)
+  mqtt.discovery_prefix:
+    name: Discovery Prefix
+    description: Home Assistant MQTT discovery prefix
+  mqtt.base_topic:
+    name: Base Topic
+    description: Base MQTT topic for all published messages
+
+  sensors:
+    name: Sensor Configuration
+    description: Configure which sensors to monitor
+  sensors.temperature:
+    name: Temperature Sensor
+    description: Monitor fermentation temperature
+  sensors.temperature.enabled:
+    name: Enable Temperature
+    description: Enable temperature monitoring
+  sensors.temperature.topic:
+    name: Temperature Topic
+    description: MQTT topic for temperature readings
+  sensors.specific_gravity:
+    name: Specific Gravity Sensor
+    description: Monitor wort/must specific gravity
+  sensors.specific_gravity.enabled:
+    name: Enable Specific Gravity
+    description: Enable SG monitoring
+  sensors.specific_gravity.topic:
+    name: SG Topic
+    description: MQTT topic for specific gravity readings
+  sensors.ph:
+    name: pH Sensor
+    description: Monitor acidity level
+  sensors.ph.enabled:
+    name: Enable pH
+    description: Enable pH monitoring
+  sensors.ph.topic:
+    name: pH Topic
+    description: MQTT topic for pH readings
+  sensors.pressure:
+    name: Pressure Sensor
+    description: Monitor fermentation pressure
+  sensors.pressure.enabled:
+    name: Enable Pressure
+    description: Enable pressure monitoring
+  sensors.pressure.topic:
+    name: Pressure Topic
+    description: MQTT topic for pressure readings
+
+  ml:
+    name: Machine Learning
+    description: ML prediction and analysis settings
+  ml.enabled:
+    name: Enable ML
+    description: Enable machine learning predictions
+  ml.prediction_interval:
+    name: Prediction Interval
+    description: Seconds between predictions (default 3600)
+  ml.model_retrain_days:
+    name: Retrain Frequency
+    description: Days between model retraining (default 7)
+  ml.min_samples_for_training:
+    name: Minimum Samples
+    description: Minimum data points before training (default 100)
+
+  alerts:
+    name: Alerts
+    description: Alert threshold configuration
+  alerts.enabled:
+    name: Enable Alerts
+    description: Enable smart alerting system
+  alerts.temperature_min:
+    name: Minimum Temperature
+    description: Minimum safe temperature in °C
+  alerts.temperature_max:
+    name: Maximum Temperature
+    description: Maximum safe temperature in °C
+  alerts.sg_stuck_threshold:
+    name: Stuck Threshold
+    description: SG change threshold for stuck detection
+  alerts.sg_stuck_hours:
+    name: Stuck Hours
+    description: Hours without change to trigger alert
+  alerts.ph_min:
+    name: Minimum pH
+    description: Minimum safe pH level
+  alerts.ph_max:
+    name: Maximum pH
+    description: Maximum safe pH level
+
+  logging:
+    name: Logging
+    description: Logging configuration
+  logging.level:
+    name: Log Level
+    description: Logging verbosity level
+  logging.structured:
+    name: Structured Logging
+    description: Use JSON structured logging format
+
+network:
+  8099/tcp: Health check and metrics endpoint

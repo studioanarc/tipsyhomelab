@@ -1,0 +1,228 @@
+name: Build and Test Add-on
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'addon/**'
+      - '.github/workflows/build-addon.yaml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'addon/**'
+      - '.github/workflows/build-addon.yaml'
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint Python Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd addon
+          pip install -r requirements.txt
+          pip install flake8 black mypy pylint
+
+      - name: Run Black
+        run: |
+          cd addon/rootfs/app
+          black --check .
+
+      - name: Run Flake8
+        run: |
+          cd addon/rootfs/app
+          flake8 . --max-line-length=100 --ignore=E203,W503
+
+      - name: Run MyPy
+        continue-on-error: true
+        run: |
+          cd addon/rootfs/app
+          mypy . --ignore-missing-imports
+
+  validate:
+    name: Validate Add-on Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate config.yaml
+        run: |
+          docker run --rm -v $(pwd)/addon:/addon \
+            homeassistant/amd64-builder:latest \
+            --addon /addon \
+            --validate
+
+  build:
+    name: Build Add-on
+    runs-on: ubuntu-latest
+    needs: [lint, validate]
+    strategy:
+      matrix:
+        arch: [amd64, aarch64, armv7]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Add-on
+        uses: home-assistant/builder@master
+        with:
+          args: |
+            --${{ matrix.arch }} \
+            --target addon \
+            --addon
+
+      - name: Test Add-on Image
+        if: matrix.arch == 'amd64'
+        run: |
+          docker run --rm -d \
+            --name wine-monitor-test \
+            -e LOG_LEVEL=DEBUG \
+            -v $(pwd)/test-config.json:/data/options.json \
+            local/wine-fermentation-monitor-${{ matrix.arch }}:latest
+
+          sleep 10
+
+          # Check health endpoint
+          docker exec wine-monitor-test wget -O- http://localhost:8099/health || exit 1
+
+          docker stop wine-monitor-test
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd addon
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov pytest-mock
+
+      - name: Run Python Tests
+        run: |
+          cd addon/rootfs/app
+          # pytest tests/ --cov=. --cov-report=xml --cov-report=term
+          echo "Tests will be added in future releases"
+
+      - name: Upload Coverage
+        if: false  # Enable when tests are added
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./addon/rootfs/app/coverage.xml
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './addon'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  publish:
+    name: Publish Add-on
+    runs-on: ubuntu-latest
+    needs: [build, test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    strategy:
+      matrix:
+        arch: [amd64, aarch64, armv7, armhf, i386]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: home-assistant/builder@master
+        with:
+          args: |
+            --${{ matrix.arch }} \
+            --target addon \
+            --addon \
+            --docker-hub ghcr.io/${{ github.repository_owner }} \
+            --image wine-fermentation-monitor-{arch} \
+            --push
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [publish]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=$(grep "version:" addon/config.yaml | cut -d'"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: Release v${{ steps.version.outputs.version }}
+          body_path: addon/CHANGELOG.md
+          draft: false
+          prerelease: false

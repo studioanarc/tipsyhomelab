@@ -1,0 +1,145 @@
+version: '3.8'
+
+services:
+  homeassistant:
+    container_name: wine-monitor-ha
+    image: homeassistant/home-assistant:latest
+    volumes:
+      - ./config:/config
+      - ./custom_components:/config/custom_components
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=America/New_York
+    ports:
+      - "8123:8123"
+    restart: unless-stopped
+    depends_on:
+      - mqtt
+      - postgres
+    networks:
+      - wine-monitor-net
+
+  mqtt:
+    container_name: wine-monitor-mqtt
+    image: eclipse-mosquitto:2
+    volumes:
+      - ./docker/mosquitto/config:/mosquitto/config
+      - ./docker/mosquitto/data:/mosquitto/data
+      - ./docker/mosquitto/log:/mosquitto/log
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    restart: unless-stopped
+    networks:
+      - wine-monitor-net
+    command: mosquitto -c /mosquitto/config/mosquitto.conf
+
+  postgres:
+    container_name: wine-monitor-db
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: wine_monitor
+      POSTGRES_USER: wine_user
+      POSTGRES_PASSWORD: wine_pass_dev
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - wine-monitor-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wine_user -d wine_monitor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mqtt-publisher:
+    container_name: wine-monitor-publisher
+    image: python:3.11-slim
+    volumes:
+      - ./scripts:/scripts
+      - ./tests/fixtures:/fixtures
+    environment:
+      MQTT_BROKER: mqtt
+      MQTT_PORT: 1883
+    command: >
+      sh -c "
+        pip install paho-mqtt &&
+        python /scripts/simulate_sensors.py
+      "
+    depends_on:
+      - mqtt
+    networks:
+      - wine-monitor-net
+    restart: unless-stopped
+
+  grafana:
+    container_name: wine-monitor-grafana
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - wine-monitor-net
+    restart: unless-stopped
+
+  adminer:
+    container_name: wine-monitor-adminer
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      - postgres
+    networks:
+      - wine-monitor-net
+    restart: unless-stopped
+
+  # Development tools
+  test-runner:
+    container_name: wine-monitor-tests
+    image: python:3.11-slim
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "
+        pip install -r requirements-dev.txt &&
+        pytest tests/ -v --cov=custom_components
+      "
+    environment:
+      MQTT_BROKER: mqtt
+      MQTT_PORT: 1883
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: wine_monitor
+      DB_USER: wine_user
+      DB_PASSWORD: wine_pass_dev
+    depends_on:
+      - mqtt
+      - postgres
+    networks:
+      - wine-monitor-net
+    profiles:
+      - test
+
+networks:
+  wine-monitor-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  grafana-data:
+    driver: local

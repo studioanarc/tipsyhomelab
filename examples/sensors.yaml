@@ -1,0 +1,274 @@
+# Wine Fermentation Monitor - Example Sensor Configuration
+# Add these to your Home Assistant configuration.yaml
+
+# ==============================================================================
+# MQTT Sensors (Auto-discovered by add-on)
+# ==============================================================================
+# The add-on automatically creates these via MQTT discovery.
+# Manual configuration is only needed if discovery fails.
+
+mqtt:
+  sensor:
+    # Temperature Sensor
+    - name: "Wine Temperature"
+      state_topic: "wine/sensors/temperature"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      unique_id: wine_temperature_sensor
+
+    # Specific Gravity Sensor
+    - name: "Wine Specific Gravity"
+      state_topic: "wine/sensors/sg"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "SG"
+      state_class: measurement
+      unique_id: wine_sg_sensor
+      icon: mdi:water-opacity
+
+    # pH Sensor
+    - name: "Wine pH"
+      state_topic: "wine/sensors/ph"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "pH"
+      state_class: measurement
+      unique_id: wine_ph_sensor
+      icon: mdi:ph
+
+    # Pressure Sensor (optional)
+    - name: "Wine Pressure"
+      state_topic: "wine/sensors/pressure"
+      value_template: "{{ value_json.value }}"
+      unit_of_measurement: "kPa"
+      device_class: pressure
+      state_class: measurement
+      unique_id: wine_pressure_sensor
+
+    # Fermentation Status
+    - name: "Wine Fermentation Status"
+      state_topic: "wine/fermentation/status"
+      value_template: "{{ value_json.status }}"
+      unique_id: wine_status_sensor
+      icon: mdi:ferris-wheel
+
+    # Completion Prediction
+    - name: "Wine Completion Prediction"
+      state_topic: "wine/fermentation/prediction"
+      value_template: "{{ value_json.predicted_completion }}"
+      unique_id: wine_prediction_sensor
+      icon: mdi:crystal-ball
+
+# ==============================================================================
+# Template Sensors (Calculated Values)
+# ==============================================================================
+
+template:
+  - sensor:
+      # Alcohol By Volume (ABV) Estimate
+      - name: "Wine ABV Estimate"
+        unique_id: wine_abv_estimate
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: mdi:percent
+        state: >
+          {% set original_sg = states('input_number.wine_original_sg') | float(1.080) %}
+          {% set current_sg = states('sensor.wine_specific_gravity') | float(1.010) %}
+          {% set abv = (original_sg - current_sg) * 131.25 %}
+          {{ abv | round(2) }}
+
+      # Attenuation Percentage
+      - name: "Wine Attenuation"
+        unique_id: wine_attenuation
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: mdi:percent-outline
+        state: >
+          {% set original_sg = states('input_number.wine_original_sg') | float(1.080) %}
+          {% set current_sg = states('sensor.wine_specific_gravity') | float(1.010) %}
+          {% set attenuation = ((original_sg - current_sg) / (original_sg - 1)) * 100 %}
+          {{ attenuation | round(1) }}
+
+      # Days in Fermentation
+      - name: "Wine Fermentation Days"
+        unique_id: wine_fermentation_days
+        icon: mdi:calendar-clock
+        state: >
+          {% set start = states('input_datetime.batch_start_time') %}
+          {% if start not in ['unknown', 'unavailable', 'none'] %}
+            {{ ((as_timestamp(now()) - as_timestamp(start)) / 86400) | round(0) }}
+          {% else %}
+            0
+          {% endif %}
+
+      # SG Change Rate (per 24h)
+      - name: "Wine SG Change Rate"
+        unique_id: wine_sg_change_rate
+        unit_of_measurement: "SG/day"
+        state_class: measurement
+        icon: mdi:trending-down
+        state: >
+          {% set current = states('sensor.wine_specific_gravity') | float(0) %}
+          {% set previous = states.sensor.wine_specific_gravity.last_updated - timedelta(days=1) %}
+          {% if previous %}
+            {{ (current - previous) | round(4) }}
+          {% else %}
+            0
+          {% endif %}
+
+      # Temperature Status
+      - name: "Wine Temperature Status"
+        unique_id: wine_temperature_status
+        icon: mdi:thermometer-alert
+        state: >
+          {% set temp = states('sensor.wine_temperature') | float(0) %}
+          {% set min = states('input_number.wine_temp_min') | float(18) %}
+          {% set max = states('input_number.wine_temp_max') | float(28) %}
+          {% if temp < min %}
+            Too Cold
+          {% elif temp > max %}
+            Too Hot
+          {% elif temp < (min + 2) %}
+            Cool
+          {% elif temp > (max - 2) %}
+            Warm
+          {% else %}
+            Optimal
+          {% endif %}
+
+      # Fermentation Health Score
+      - name: "Wine Fermentation Health"
+        unique_id: wine_fermentation_health
+        unit_of_measurement: "%"
+        icon: mdi:heart-pulse
+        state: >
+          {% set temp_ok = 1 if 18 <= (states('sensor.wine_temperature') | float(20)) <= 28 else 0 %}
+          {% set ph_ok = 1 if 2.8 <= (states('sensor.wine_ph') | float(3.5)) <= 4.0 else 0 %}
+          {% set sg_changing = 1 if (states('sensor.wine_sg_change_rate') | float(0)) < -0.001 else 0 %}
+          {{ ((temp_ok + ph_ok + sg_changing) / 3 * 100) | round(0) }}
+
+# ==============================================================================
+# Binary Sensors (Status Indicators)
+# ==============================================================================
+
+  - binary_sensor:
+      # Fermentation Active
+      - name: "Wine Fermentation Active"
+        unique_id: wine_fermentation_active
+        device_class: running
+        state: >
+          {{ states('sensor.wine_fermentation_status') == 'active' }}
+
+      # Temperature in Range
+      - name: "Wine Temperature OK"
+        unique_id: wine_temperature_ok
+        device_class: problem
+        state: >
+          {% set temp = states('sensor.wine_temperature') | float(0) %}
+          {{ 18 <= temp <= 28 }}
+
+      # pH in Range
+      - name: "Wine pH OK"
+        unique_id: wine_ph_ok
+        device_class: problem
+        state: >
+          {% set ph = states('sensor.wine_ph') | float(0) %}
+          {{ 2.8 <= ph <= 4.0 }}
+
+      # Fermentation Stuck
+      - name: "Wine Fermentation Stuck"
+        unique_id: wine_fermentation_stuck
+        device_class: problem
+        state: >
+          {% set change_rate = states('sensor.wine_sg_change_rate') | float(0) %}
+          {% set status = states('sensor.wine_fermentation_status') %}
+          {{ status == 'active' and change_rate > -0.001 }}
+
+# ==============================================================================
+# Input Helpers (Configuration Storage)
+# ==============================================================================
+
+input_number:
+  # Original Specific Gravity
+  wine_original_sg:
+    name: Wine Original SG
+    min: 1.000
+    max: 1.200
+    step: 0.001
+    initial: 1.080
+    mode: box
+    icon: mdi:water
+
+  # Target Final Gravity
+  wine_target_fg:
+    name: Wine Target FG
+    min: 0.990
+    max: 1.050
+    step: 0.001
+    initial: 0.996
+    mode: box
+    icon: mdi:bullseye-arrow
+
+  # Temperature Range
+  wine_temp_min:
+    name: Wine Minimum Temperature
+    min: 10
+    max: 30
+    step: 0.5
+    initial: 18
+    mode: box
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-low
+
+  wine_temp_max:
+    name: Wine Maximum Temperature
+    min: 10
+    max: 35
+    step: 0.5
+    initial: 28
+    mode: box
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-high
+
+input_datetime:
+  # Batch Start Time
+  batch_start_time:
+    name: Batch Start Time
+    has_date: true
+    has_time: true
+    icon: mdi:calendar-start
+
+input_text:
+  # Batch Name
+  wine_batch_name:
+    name: Wine Batch Name
+    initial: "Batch 2025-01"
+    max: 100
+    icon: mdi:label
+
+  # Wine Variety
+  wine_variety:
+    name: Wine Variety
+    initial: "Cabernet Sauvignon"
+    max: 100
+    icon: mdi:glass-wine
+
+  # Dashboard Status
+  wine_dashboard_status:
+    name: Wine Dashboard Status
+    max: 255
+    icon: mdi:information
+
+input_button:
+  # Start New Batch
+  start_new_wine_batch:
+    name: Start New Wine Batch
+    icon: mdi:play-circle
+
+counter:
+  # Fermentation Days Counter
+  fermentation_days:
+    name: Fermentation Days
+    initial: 0
+    step: 1
+    icon: mdi:counter

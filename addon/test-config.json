@@ -1,0 +1,55 @@
+{
+  "mqtt": {
+    "host": "localhost",
+    "port": 1883,
+    "username": "",
+    "password": "",
+    "discovery_prefix": "homeassistant",
+    "base_topic": "wine/fermentation"
+  },
+  "sensors": {
+    "temperature": {
+      "enabled": true,
+      "topic": "wine/sensors/temperature",
+      "device_class": "temperature",
+      "unit": "°C"
+    },
+    "specific_gravity": {
+      "enabled": true,
+      "topic": "wine/sensors/sg",
+      "device_class": "",
+      "unit": "SG"
+    },
+    "ph": {
+      "enabled": true,
+      "topic": "wine/sensors/ph",
+      "device_class": "",
+      "unit": "pH"
+    },
+    "pressure": {
+      "enabled": false,
+      "topic": "wine/sensors/pressure",
+      "device_class": "pressure",
+      "unit": "kPa"
+    }
+  },
+  "ml": {
+    "enabled": true,
+    "prediction_interval": 3600,
+    "model_retrain_days": 7,
+    "min_samples_for_training": 100
+  },
+  "alerts": {
+    "enabled": true,
+    "temperature_min": 18.0,
+    "temperature_max": 28.0,
+    "sg_stuck_threshold": 0.001,
+    "sg_stuck_hours": 48,
+    "ph_min": 2.8,
+    "ph_max": 4.0
+  },
+  "logging": {
+    "level": "INFO",
+    "structured": true
+  }
+}

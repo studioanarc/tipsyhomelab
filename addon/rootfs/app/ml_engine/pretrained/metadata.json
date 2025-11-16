@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "created": "2025-11-16T09:06:18.030049",
+  "description": "Placeholder models for wine fermentation monitoring",
+  "note": "These are placeholders. Run create_baseline_models.py with scikit-learn to generate real models.",
+  "models": {
+    "minimal": {
+      "type": "rule_based",
+      "sensors_required": [
+        "bubble_counter"
+      ],
+      "description": "Exponential decay model using bubble count only",
+      "accuracy": "Moderate",
+      "file": "minimal_model.pkl",
+      "trained": false
+    },
+    "basic": {
+      "type": "placeholder",
+      "sensors_required": [
+        "bubble_counter",
+        "gravity"
+      ],
+      "description": "Ridge regression with bubble and gravity (placeholder)",
+      "accuracy": "Good (when trained)",
+      "file": "basic_model.pkl",
+      "trained": false
+    },
+    "advanced": {
+      "type": "placeholder",
+      "sensors_required": [
+        "bubble_counter",
+        "gravity",
+        "temperature",
+        "ph"
+      ],
+      "description": "Gradient Boosting with all sensors (placeholder)",
+      "accuracy": "Best (when trained)",
+      "file": "advanced_model.pkl",
+      "trained": false
+    },
+    "anomaly_detector": {
+      "type": "placeholder",
+      "description": "Multi-strategy anomaly detection (rule-based only)",
+      "file": "anomaly_detector.pkl",
+      "trained": false
+    }
+  },
+  "installation_instructions": {
+    "baseline_models": "pip install numpy scikit-learn joblib scipy && python create_baseline_models.py",
+    "production_models": "Use training_pipeline.py with real fermentation data"
+  }
+}

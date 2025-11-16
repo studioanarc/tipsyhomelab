@@ -1,0 +1,57 @@
+# Minimal TipsyHomeLab Configuration
+#
+# This is the absolute minimum configuration needed to get started.
+# Perfect for:
+# - First-time users
+# - Testing the integration
+# - Simple fermentation monitoring with just a bubble counter
+#
+# Prerequisites:
+# - MQTT broker running (Mosquitto recommended)
+# - Bubble counter sensor publishing to MQTT
+# - Home Assistant with TipsyHomeLab installed
+
+tipsyhomelab:
+  # MQTT Connection
+  # Replace with your MQTT broker details
+  mqtt:
+    broker: localhost  # Use IP address if broker is on different machine
+    port: 1883
+    username: !secret mqtt_username  # Store credentials in secrets.yaml
+    password: !secret mqtt_password
+
+  # Batch Configuration
+  batches:
+    - name: "My First Batch"
+
+      # Batch type (affects default settings and predictions)
+      type: petnat  # Options: petnat, beer, wine, cider, mead, kombucha, custom
+
+      # Sensors
+      # At minimum, you need ONE sensor (bubble counter OR gravity sensor)
+      sensors:
+        bubble_counter: "tipsylab/batch1/bubbles"
+        # This is the MQTT topic your bubble counter publishes to
+        # Make sure it matches your sensor's configuration!
+
+# That's it! This minimal config will:
+# - Connect to your MQTT broker
+# - Monitor bubble counter for fermentation activity
+# - Create sensor entities in Home Assistant
+# - Provide basic fermentation status
+
+# Optional: Add temperature sensor for better predictions
+# sensors:
+#   bubble_counter: "tipsylab/batch1/bubbles"
+#   temperature: "tipsylab/batch1/temp"
+
+# Next Steps:
+# 1. Verify your bubble counter is publishing to MQTT
+# 2. Restart Home Assistant
+# 3. Check Configuration → Integrations for TipsyHomeLab
+# 4. Add entities to your dashboard
+# 5. Start fermenting!
+
+# See full_config.yaml for all available options
+# See ispindel_config.yaml for gravity sensor setup
+# Read docs/CONFIGURATION.md for detailed explanations
